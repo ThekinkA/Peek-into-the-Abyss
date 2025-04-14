@@ -46,10 +46,61 @@ export default [
     ],
   },
   {
-    name: 'list.table-list',
-    icon: 'table',
-    path: '/list',
-    component: './TableList',
+    name: '态势感知',
+    icon: 'radarChart',
+    path: '/situation-awareness',
+    component: './SituationAwareness',
+  },
+  {
+    name: '数据采集引擎',
+    icon: 'database',
+    path: '/data-collection',
+    routes: [
+      {
+        name: '采集数据统计',
+        path: '/data-collection/statistics',
+        component: './DataCollection/Statistics',
+      },
+      {
+        name: '详细信息展示',
+        path: '/data-collection/details',
+        component: './DataCollection/Details',
+      },
+    ],
+  },
+  {
+    name: '数据分析结果',
+    icon: 'barChart',
+    path: '/data-analysis',
+    routes: [
+      {
+        name: 'Tor节点信息概览',
+        path: '/data-analysis/tor-overview',
+        component: './DataAnalysis/TorOverview',
+      },
+      {
+        name: '节点分析结果',
+        path: '/data-analysis/node-results',
+        component: './DataAnalysis/NodeResults',
+      },
+    ],
+  },
+  {
+    name: '控制干预系统',
+    icon: 'control',
+    path: '/control-system',
+    routes: [
+      {
+        name: '攻击路径推理系统',
+        path: '/control-system/attack-path',
+        component: './ControlSystem/AttackPath',
+      },
+      {
+        name: '推理结果分析系统',
+        path: '/control-system/result-analysis',
+        component: './ControlSystem/ResultAnalysis',
+      },
+    ],
   },
   {
     path: '/',
