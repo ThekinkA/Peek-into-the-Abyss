@@ -67,6 +67,13 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
       if (!initialState?.currentUser && location.pathname !== loginPath) {
         history.push(loginPath);
       }
+
+      if (
+        initialState?.currentUser &&
+        (location.pathname === '/' || location.pathname === '/welcome')
+      ) {
+        history.replace('/situation-awareness'); // 👉 修改为你自己的默认路径
+      }
     },
     bgLayoutImgList: [
       {

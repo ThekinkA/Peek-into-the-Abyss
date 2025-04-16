@@ -1,5 +1,40 @@
-.situation-awareness {
-  h1 {
-    color: #1890ff;
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
   }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+// 入场动画
+.fade-item-enter {
+  transform: translateY(-10px);
+  opacity: 0;
+}
+.fade-item-enter-active {
+  transform: translateY(0);
+  opacity: 1;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+// 离场动画
+.fade-item-exit {
+  opacity: 1;
+}
+.fade-item-exit-active {
+  transform: translateY(10px);
+  opacity: 0;
+  transition: opacity 0.5s ease, transform 0.5s ease;
 }

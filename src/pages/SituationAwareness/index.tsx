@@ -1,12 +1,14 @@
-import { Column, Line } from '@ant-design/plots';
-import { Card, Col, Row } from 'antd';
-import React, { useEffect, useRef } from 'react';
+import { Card, Col, Popover, Row } from 'antd';
+import ReactECharts from 'echarts-for-react';
+import React, { useEffect, useRef, useState } from 'react';
 import Globe from 'react-globe.gl';
+import { CSSTransition, TransitionGroup } from 'react-transition-group';
+import './style.less';
 
 const SituationAwareness: React.FC = () => {
   const globeRef = useRef<any>();
+  const [openPopoverIndex, setOpenPopoverIndex] = useState<number | null>(null);
 
-  // 模拟暗网节点数据
   interface NodeData {
     lat: number;
     lng: number;
@@ -15,24 +17,13 @@ const SituationAwareness: React.FC = () => {
   }
 
   const nodesData: NodeData[] = [
-    { lat: 37.7749, lng: -122.4194, size: 50, city: 'San Francisco' },
-    { lat: 40.7128, lng: -74.006, size: 80, city: 'New York' },
-    { lat: 51.5074, lng: -0.1278, size: 60, city: 'London' },
-    { lat: 35.6895, lng: 139.6917, size: 100, city: 'Tokyo' },
-    { lat: 48.8566, lng: 2.3522, size: 70, city: 'Paris' },
+    { lat: 37.7749, lng: -122.4194, size: 2.7, city: 'San Francisco' },
+    { lat: 40.7128, lng: -74.006, size: 2, city: 'New York' },
+    { lat: 51.5074, lng: -0.1278, size: 2.3, city: 'London' },
+    { lat: 35.6895, lng: 139.6917, size: 2.5, city: 'Tokyo' },
+    { lat: 48.8566, lng: 2.3522, size: 2.6, city: 'Paris' },
   ];
 
-  // 折线图数据：最新的 6 个 Tor 节点数量变化
-  const lineData = [
-    { time: '2023-11', value: 120 },
-    { time: '2023-12', value: 150 },
-    { time: '2024-01', value: 180 },
-    { time: '2024-02', value: 200 },
-    { time: '2024-03', value: 170 },
-    { time: '2024-04', value: 190 },
-  ];
-
-  // 柱状图数据：近 6 个月的暗网犯罪事件数量统计
   const columnData = [
     { month: '2023-11', count: 30 },
     { month: '2023-12', count: 45 },
@@ -42,141 +33,301 @@ const SituationAwareness: React.FC = () => {
     { month: '2024-04', count: 55 },
   ];
 
-  // 折线图配置
-  const lineConfig = {
-    data: lineData,
-    xField: 'time',
-    yField: 'value',
-    smooth: true,
-    point: {
-      size: 5,
-      shape: 'circle',
-    },
-    color: '#1979C9',
-    xAxis: {
-      title: {
-        text: '时间',
-      },
-    },
-    yAxis: {
-      title: {
-        text: '节点数量',
-      },
-    },
-    height: 200, // 设置图表高度
-  };
-
-  // 柱状图配置
-  const columnConfig = {
-    data: columnData,
-    xField: 'month',
-    yField: 'count',
-    color: '#FF4D4F',
-    xAxis: {
-      title: {
-        text: '月份',
-      },
-    },
-    yAxis: {
-      title: {
-        text: '事件数量',
-      },
-    },
-    height: 200, // 设置图表高度
-  };
-
   useEffect(() => {
     if (globeRef.current) {
-      // 设置初始视角
       globeRef.current.pointOfView({ lat: 30, lng: 110, altitude: 2.5 });
-
-      // 添加自动旋转
       const controls = globeRef.current.controls();
       controls.autoRotate = true;
       controls.autoRotateSpeed = 0.5;
     }
   }, []);
 
+  const [ipList, setIpList] = useState<string[]>([
+    '185.220.101.1',
+    '104.244.73.2',
+    '192.42.116.15',
+    '185.100.87.202',
+  ]);
+
+  // 模拟每隔2秒添加一个新IP,传入数据在这里
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const newIp = `192.168.0.${Math.floor(Math.random() * 255)}`;
+      setIpList((prev) => {
+        const updated = [newIp, ...prev];
+        return updated.slice(0, 4); // 保证最多显示 4 个
+      });
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // ECharts 配置项
+
+  const newsData = [
+    {
+      title: '王昌坤致使隔壁母猪怀孕，科学界惊呼生物学被改写',
+      date: '2077-13-31',
+    },
+    {
+      title: '新型加密技术崛起，挑战全球安全',
+      date: '2035-04-99',
+    },
+    {
+      title: '数据泄露案件频发，黑客攻击加剧',
+      date: '2025-04-15',
+    },
+    {
+      title: '数据泄露案件频发，黑客攻击加剧',
+      date: '2025-04-15',
+    },
+  ];
+
+  const columnChartOption = {
+    tooltip: {
+      trigger: 'item',
+      backgroundColor: 'rgba(20,20,20, 1)',
+      textStyle: { color: '#ffffff' },
+      formatter: (params: any) => {
+        return `
+          <div style="color: #FCDA8C; font-weight: bold; margin-bottom: 6px;">${params.name}</div>
+          <div>数量: <span style="color:#FCDA8C">${params.value}</span></div>
+        `;
+      },
+    },
+    xAxis: {
+      type: 'category',
+      data: columnData.map((d) => d.month),
+      axisLabel: {
+        color: '#FFD5D5',
+      },
+      axisLine: {
+        lineStyle: { color: '#FFD5D5' },
+      },
+    },
+    yAxis: {
+      type: 'value',
+      axisLabel: {
+        color: '#FFD5D5',
+      },
+      axisLine: {
+        lineStyle: { color: '#FFD5D5' },
+      },
+    },
+    series: [
+      {
+        data: columnData.map((d) => d.count),
+        type: 'bar',
+        itemStyle: { color: '#DA2A2A' },
+        barWidth: 40,
+      },
+    ],
+  };
+
   return (
-    <div style={{ padding: '20px' }}>
-      <h1 style={{ textAlign: 'center', marginBottom: '20px' }}>暗网节点态势感知系统</h1>
-      <p style={{ textAlign: 'center', fontSize: '16px', color: '#666', marginBottom: '40px' }}>
-        本系统通过可视化技术展示全球范围内的暗网节点分布情况，并提供最新的 Tor
-        节点数量变化和暗网犯罪事件统计数据。
-      </p>
-      <Row gutter={[16, 16]}>
-        {/* 3D 地球 */}
-        <Col span={24}>
-          <Card
-            title="全球暗网节点分布"
-            bodyStyle={{
-              padding: '0', // 移除内边距
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              background: '#000',
-            }}
-          >
-            <div
-              style={{
-                width: '100%', // 确保宽度占满
-                height: '500px',
-                borderRadius: '12px',
-                overflow: 'hidden',
-                display: 'flex', // 使用 flex 布局
+    <>
+      {/* 遮罩层 */}
+      {openPopoverIndex !== null && (
+        <div
+          onClick={() => setOpenPopoverIndex(null)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            zIndex: 998,
+          }}
+        />
+      )}
+
+      <div style={{ padding: '20px' }}>
+        <Row gutter={[50, 50]}>
+          <Col span={14}>
+            <Card
+              title="全球暗网节点分布"
+              bodyStyle={{
+                padding: 0,
+                background: '#000',
+                display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
               }}
             >
-              <Globe
-                ref={globeRef}
-                globeImageUrl="//unpkg.com/three-globe/example/img/earth-night.jpg"
-                bumpImageUrl="//unpkg.com/three-globe/example/img/earth-topology.png"
-                backgroundImageUrl="//unpkg.com/three-globe/example/img/night-sky.png"
-                pointsData={nodesData}
-                pointAltitude={(d: NodeData) => d.size / 50}
-                pointColor={() => '#FF4444'}
-                pointRadius={0.5}
-                pointsMerge={true}
-                pointsTransitionDuration={1000}
-                atmosphereColor="rgba(255,100,100,0.3)"
-                atmosphereAltitude={0.1}
-                showGraticules={true}
-                pointLabel={(d: NodeData) => `
-                  <div style="
-                    background-color: rgba(0,0,0,0.8);
-                    color: white;
-                    padding: 8px;
-                    border-radius: 4px;
-                    font-family: Arial;
-                    font-size: 12px;
-                  ">
-                    <strong>${d.city}</strong><br/>
-                    节点数量: ${d.size}
+              <div
+                style={{
+                  width: '100%',
+                  height: '650px',
+                  borderRadius: '12px',
+                  overflow: 'hidden',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}
+              >
+                <Globe
+                  ref={globeRef}
+                  globeImageUrl="//unpkg.com/three-globe/example/img/earth-night.jpg"
+                  bumpImageUrl="//unpkg.com/three-globe/example/img/earth-topology.png"
+                  backgroundImageUrl="//unpkg.com/three-globe/example/img/night-sky.png"
+                  pointsData={nodesData}
+                  pointAltitude={(d) => (d as NodeData).size / 10}
+                  pointColor={() => '#FCDA8C'}
+                  pointRadius={0.5}
+                  pointsMerge={true}
+                  pointsTransitionDuration={1000}
+                  atmosphereColor="rgba(255,100,100,0.3)"
+                  atmosphereAltitude={0.1}
+                  showGraticules={true}
+                  pointLabel={(d) => {
+                    const data = d as NodeData;
+                    return `
+                      <div style="background-color: rgba(255,255,255,0.95); color: #000; padding: 8px; border-radius: 4px; font-family: Arial; font-size: 12px;">
+                        <strong>${data.city}</strong><br/>
+                        <strong>节点数量: ${data.size}</strong>
+                      </div>
+                    `;
+                  }}
+                  width={950}
+                  height={650}
+                />
+              </div>
+            </Card>
+          </Col>
+
+          <Col span={8}>
+            <Row gutter={[0, 50]}>
+              <Col span={24}>
+                <Card
+                  title="最新的 6 个 Tor 节点数量变化"
+                  bodyStyle={{ padding: '10px', background: '#070707' }}
+                >
+                  <ReactECharts option={columnChartOption} />
+                </Card>
+              </Col>
+
+              <Col span={24}>
+                <Card
+                  title="最新新闻"
+                  bodyStyle={{
+                    padding: '10px',
+                    background: '#070707',
+                    color: '#fff',
+                    height: '40%',
+                  }}
+                >
+                  {newsData.map((news, index) => (
+                    <Popover
+                      key={index}
+                      content={
+                        <div style={{ maxWidth: '300px' }}>
+                          <h4>{news.title}</h4>
+                          <p>这是该新闻的详细内容，可以从后端获取或手动补充摘要。</p>
+                        </div>
+                      }
+                      title="新闻详情"
+                      trigger="click"
+                      open={openPopoverIndex === index}
+                      onOpenChange={(visible) => setOpenPopoverIndex(visible ? index : null)}
+                      overlayStyle={{ zIndex: 999 }}
+                    >
+                      <div
+                        onClick={(e) => {
+                          e.stopPropagation(); // 避免遮罩触发
+                          setOpenPopoverIndex(index);
+                        }}
+                        style={{
+                          cursor: 'pointer',
+                          padding: '10px',
+                          background: '#1c1c1c',
+                          color: '#FCDA8C',
+                          marginBottom: '10px',
+                          borderRadius: '4px',
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span>{news.title}</span>
+                          <span style={{ color: '#aaa' }}>{news.date}</span>
+                        </div>
+                      </div>
+                    </Popover>
+                  ))}
+                </Card>
+              </Col>
+            </Row>
+          </Col>
+        </Row>
+      </div>
+      <div style={{ padding: '20px' }}>
+        <Row gutter={[50, 50]}>
+          <Col span={14}>
+            <Card title="实时任务展示" bodyStyle={{ background: '#1c1c1c', color: '#fff' }}>
+              {[
+                { label: '已获取 Tor 节点', percent: 30.5 },
+                { label: 'Tor 节点扫描进度', percent: 80 },
+                { label: '已处理 Tor 节点', percent: 29 },
+              ].map((item, index) => (
+                <div key={index} style={{ marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
+                    <div style={{ marginRight: 10, color: '#FCDA8C' }}>{item.label}</div>
+                    <div
+                      style={{
+                        width: 12,
+                        height: 12,
+                        border: '2px solid #FCDA8C',
+                        borderTop: '2px solid transparent',
+                        borderRadius: '50%',
+                        animation: 'spin 1s linear infinite',
+                        marginLeft: 'auto',
+                      }}
+                    />
                   </div>
-                `}
-                width={800} // 设置固定宽度
-                height={500} // 设置固定高度
-              />
-            </div>
-          </Card>
-        </Col>
+                  <div>
+                    <div style={{ color: '#aaa' }}>{item.percent}%</div>
+                    <div style={{ background: '#333', borderRadius: 4, overflow: 'hidden' }}>
+                      <div
+                        style={{
+                          width: `${item.percent}%`,
+                          height: 8,
+                          background: '#DA2A2A',
+                          transition: 'width 0.3s',
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </Card>
+          </Col>
 
-        {/* 折线图 */}
-        <Col span={12}>
-          <Card title="最新的 6 个 Tor 节点数量变化" bodyStyle={{ padding: '10px' }}>
-            <Line {...lineConfig} />
-          </Card>
-        </Col>
-
-        {/* 柱状图 */}
-        <Col span={12}>
-          <Card title="近 6 个月暗网犯罪事件数量统计" bodyStyle={{ padding: '10px' }}>
-            <Column {...columnConfig} />
-          </Card>
-        </Col>
-      </Row>
-    </div>
+          <Col span={8}>
+            <Card
+              title="新增已检测 IP 展示"
+              bodyStyle={{ background: '#070707', color: '#fff', height: '270px' }}
+            >
+              <TransitionGroup style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {ipList.map((ip) => (
+                  <CSSTransition key={ip} timeout={500} classNames="fade-item">
+                    <div
+                      className="ip-item"
+                      style={{
+                        background: '#1c1c1c',
+                        color: '#FCDA8C',
+                        padding: '10px',
+                        borderRadius: '4px',
+                      }}
+                    >
+                      新增 IP: {ip}
+                    </div>
+                  </CSSTransition>
+                ))}
+              </TransitionGroup>
+            </Card>
+          </Col>
+        </Row>
+      </div>
+    </>
   );
 };
 
