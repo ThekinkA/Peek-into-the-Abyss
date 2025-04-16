@@ -1,0 +1,68 @@
+/* Statistics.css */
+
+.card {
+    width: 264px;
+    height: 154px;
+    background: #1e1e2f;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s, box-shadow 0.3s;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    color: white;  /* 确保卡片内容的文本为白色 */
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+.icon {
+    width: 14px;
+    height: 14px;
+    background-color: rgba(255, 255, 255, 0.45); /* 改为白色背景 */
+    border-radius: 50%;
+    position: absolute;
+    top: 23.75px;
+    left: 226px;
+}
+
+.text {
+    font-size: 32px;
+    font-weight: bold;
+    color: #ffffff;
+    text-align: left;
+    line-height: 38px;
+}
+
+.subtitle {
+    font-size: 16px;
+    color: #a0a0a0;
+    margin-bottom: 8px;
+}
+
+/* 改变行和列的布局颜色 */
+.ant-statistic-title {
+    color: rgba(255, 255, 255, 0.75); /* 确保统计标题在黑色背景上可见 */
+}
+
+.ant-statistic-content {
+    color: rgba(255, 255, 255, 1); /* 统计内容为白色 */
+}
+
+/* 改变框体和图标的阴影和轮廓，以适应黑色背景 */
+.ant-statistic {
+    background-color: rgba(0, 0, 0, 0.1); /* 背景设置为深色以突出显示 */
+    border-radius: 4px;
+    box-shadow: 0px 2px 8px rgba(255, 255, 255, 0.2); /* 增强阴影效果 */
+}
+
+.card .anticon {
+    opacity: 0.8;
+    transition: opacity 0.3s;
+}
+
+.card:hover .anticon {
+    opacity: 1;
+}
