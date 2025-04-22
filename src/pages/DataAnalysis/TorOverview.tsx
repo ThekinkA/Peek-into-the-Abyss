@@ -141,6 +141,99 @@ const TorNodeVisualization = () => {
       });
   };
 
+  useEffect(() => {
+    // === Family 图谱 ===
+    const familyGraph = echarts.init(document.getElementById('familyGraph')!);
+    const familyOption = {
+      title: { text: '', left: 'center' },
+      tooltip: {
+        trigger: 'item',
+        formatter: (params) => {
+          if (params.dataType === 'node') {
+            return `节点：${params.data.name}`;
+          } else if (params.dataType === 'edge') {
+            return `连接：${params.data.source} → ${params.data.target}`;
+          }
+        },
+      },
+      series: [
+        {
+          type: 'graph',
+          layout: 'force',
+          roam: true,
+          zoom: 0.7, // ✅ 初始缩放，避免超出容器
+          center: null, // ✅ 自动居中
+          force: {
+            repulsion: 300,
+            edgeLength: 150,
+          },
+          label: {
+            show: true,
+            color: '#fff',
+            fontSize: 14,
+          },
+          edgeSymbol: ['circle', 'arrow'],
+          edgeSymbolSize: [4, 10],
+          lineStyle: {
+            color: 'source',
+            width: 2,
+            curveness: 0.3,
+          },
+          emphasis: {
+            focus: 'adjacency',
+            lineStyle: {
+              width: 4,
+            },
+          },
+          data: [
+            { name: '节点 A', symbolSize: 50, itemStyle: { color: '#FF6F61', shadowBlur: 10, shadowColor: '#555' } },
+            { name: '节点 B', symbolSize: 40, itemStyle: { color: '#6A5ACD' } },
+            { name: '节点 C', symbolSize: 40, itemStyle: { color: '#1ABC9C' } },
+            { name: '节点 D', symbolSize: 30, itemStyle: { color: '#F4D03F' } },
+          ],
+          links: [
+            { source: '节点 A', target: '节点 B', lineStyle: { color: '#FF6F61' } },
+            { source: '节点 A', target: '节点 C', lineStyle: { color: '#FF6F61' } },
+            { source: '节点 B', target: '节点 D', lineStyle: { color: '#6A5ACD' } },
+          ],
+        },
+      ],
+    };
+
+
+    familyGraph.setOption(familyOption);
+    familyGraph.resize();
+    window.addEventListener('resize', () => familyGraph.resize());
+
+    // === 横向柱状图 ===
+    const vulnChart = echarts.init(document.getElementById('vulnChart')!);
+    const vulnOption = {
+      tooltip: { trigger: 'item' },
+      xAxis: {
+        type: 'value',
+        boundaryGap: [0, 0.01],
+      },
+      yAxis: {
+        type: 'category',
+        data: ['配置错误', '旧版本', '开放目录', '加密问题', '未知风险'],
+      },
+      series: [
+        {
+          name: '漏洞数量',
+          type: 'bar',
+          data: [80, 60, 40, 20, 10],
+          itemStyle: {
+            color: '#FF6F61',
+          },
+        },
+      ],
+    };
+    vulnChart.setOption(vulnOption);
+    vulnChart.resize();
+    window.addEventListener('resize', () => vulnChart.resize());
+  }, []);
+
+
   // 切换节点类型
   const handleTypeChange = (type: React.SetStateAction<string>) => {
     setActiveType(type);
@@ -154,6 +247,8 @@ const TorNodeVisualization = () => {
       [type]: { current: page, pageSize },
     }));
   };
+
+
 
   return (
     <div>
@@ -223,6 +318,49 @@ const TorNodeVisualization = () => {
       </div>
 
       <div id="worldMap"></div>
+      {/* Family 知识图谱 + 含义介绍 */}
+      <Row gutter={16} style={{ marginBottom: '20px', marginTop: '20px' }}>
+        <Col span={16}>
+          <Card
+            title="Family 字段知识图谱"
+            bodyStyle={{ padding: 0 }}
+            style={{ height: '400px' }}
+          >
+            <div id="familyGraph" style={{ width: '100%', height: '400px' }}></div>
+          </Card>
+        </Col>
+        <Col span={8}>
+          <Card title="Family 字段含义">
+            <p  style={{height: '250px' }}>
+              在 Tor 网络中，family 表示多个节点属于同一个运营实体或相互信任的关系。
+              通常情况下，Tor 会避免将属于同一个 family 的节点同时用于构建同一路径，
+              以防止信息泄露或被中间人攻击。该字段可用于构建更加安全、隐私保护更强的路由。
+            </p>
+          </Card>
+        </Col>
+      </Row>
+
+      {/* 漏洞说明 + 数据图表 */}
+      <Row gutter={16} style={{ marginBottom: '20px' }}>
+        <Col span={8}>
+          <Card title="漏洞说明" style={{height: '300px' }}>
+            <p>
+              以下图表展示了 Tor 网络中节点常见的安全漏洞分布情况，包含配置错误、
+              老旧软件、开放目录、加密问题等。及时修复这些漏洞可以提升整个网络的安全性。
+            </p>
+          </Card>
+        </Col>
+        <Col span={16}>
+          <Card
+            title="漏洞数据统计"
+            bodyStyle={{ padding: 0 }}
+            style={{ height: '350px' }}
+          >
+            <div id="vulnChart" style={{ width: '100%', height: '350px', paddingBottom: '50px' }}></div>
+          </Card>
+        </Col>
+      </Row>
+
     </div>
   );
 };
@@ -345,6 +483,7 @@ const NodeCard = ({
         </Card>
       </div>
     </div>
+
   );
 };
 
