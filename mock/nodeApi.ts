@@ -2,9 +2,9 @@ import { Request, Response } from 'express';
 import mysql from 'mysql2/promise';
 
 const pool = mysql.createPool({
-  host: 'localhost',
-  user: 'root',
-  password: '314127',
+  host: '96.30.195.99',
+  user: 'remote_user',
+  password: 'root',
   database: 'exploring_the_abyss',
   waitForConnections: true,
   connectionLimit: 10,
