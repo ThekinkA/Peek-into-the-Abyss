@@ -183,11 +183,18 @@ const SituationAwareness: React.FC = () => {
                   pointAltitude={() => 0.2}
                   pointColor={(d) => {
                     const data = d as NodeData;
-                    const alpha = Math.min(Math.max((data.size - 2) / 1, 0), 1) * 0.8 + 0.2;
-                    return `rgba(252,218,140,${alpha.toFixed(2)})`;
+                    const minSize = Math.min(...nodesData.map(n => n.size));
+                    const maxSize = Math.max(...nodesData.map(n => n.size));
+                    const t = (data.size - minSize) / (maxSize - minSize || 1); // 避免除以0
+
+                    const r = 255;
+                    const g = Math.round(255 * (1 - t));
+                    const b = 0;
+
+                    return `rgba(${r},${g},${b},0.7)`;
                   }}
-                  pointRadius={0.5}
-                  pointsMerge={true}
+                  pointRadius={0.2}
+                  pointsMerge={false}
                   pointsTransitionDuration={1000}
                   atmosphereColor="rgba(255,100,100,0.3)"
                   atmosphereAltitude={0.1}
