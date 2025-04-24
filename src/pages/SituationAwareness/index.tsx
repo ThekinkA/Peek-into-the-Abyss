@@ -180,7 +180,7 @@ const SituationAwareness: React.FC = () => {
                   bumpImageUrl="//unpkg.com/three-globe/example/img/earth-topology.png"
                   backgroundImageUrl="//unpkg.com/three-globe/example/img/night-sky.png"
                   pointsData={nodesData}
-                  pointAltitude={() => 0.3}
+                  pointAltitude={() => 0.2}
                   pointColor={(d) => {
                     const data = d as NodeData;
                     const alpha = Math.min(Math.max((data.size - 2) / 1, 0), 1) * 0.8 + 0.2;
