@@ -5,11 +5,70 @@ import {
   NodeIndexOutlined,
 } from '@ant-design/icons';
 import { Card, Col, Row, Table } from 'antd';
-import React from 'react';
+import * as echarts from 'echarts';
+import React, { useEffect } from 'react';
 import EChartComponent from '../../components/EChartComponent'; // 引入封装的组件
 import './Statistics.css';
 
 const Statistics: React.FC = () => {
+  useEffect(() => {
+    // 初始化 ECharts 实例
+    const myChart = echarts.init(document.getElementById('worldMap') as HTMLElement);
+
+    // 加载世界地图数据
+    myChart.showLoading();
+    fetch('/geo/world.json') // 指向 public/geo/world.json
+      .then((response) => response.json())
+      .then((worldJson) => {
+        myChart.hideLoading();
+
+        // 注册世界地图
+        echarts.registerMap('world', worldJson);
+
+        // 数据示例
+        const data = [
+          { name: 'China', value: 1409517397 },
+          { name: 'India', value: 1339180127 },
+          { name: 'United States', value: 324459463 },
+          { name: 'Indonesia', value: 263991379 },
+          { name: 'Brazil', value: 209288278 },
+          { name: 'Pakistan', value: 197015955 },
+          { name: 'Nigeria', value: 190886311 },
+          { name: 'Bangladesh', value: 164669751 },
+          { name: 'Russia', value: 143989754 },
+          { name: 'Mexico', value: 129163276 },
+        ];
+
+        // 地图配置
+        const mapOption = {
+          visualMap: {
+            left: 'right',
+            min: 0,
+            max: 1500000000,
+            inRange: {
+              color: ['#e0f3f8', '#abd9e9', '#74add1', '#4575b4', '#313695'],
+            },
+            text: ['High', 'Low'],
+            calculable: true,
+          },
+          series: [
+            {
+              type: 'map',
+              map: 'world',
+              roam: true,
+              data: data,
+            },
+          ],
+        };
+
+        // 设置地图配置
+        myChart.setOption(mapOption);
+      })
+      .catch((error) => {
+        console.error('加载世界地图数据失败:', error);
+      });
+  }, []);
+
   // 表格数据
   const columns = [
     {
@@ -398,13 +457,33 @@ const Statistics: React.FC = () => {
           </Card>
         </Col>
 
-        {/* 替换为 iframe 嵌入地图 */}
+        {/* 世界地图 */}
         <Col span={16}>
           <Card title="2D 世界地图" style={{ height: '100%' }}>
-            <iframe
-              src="http://127.0.0.1:5500/src/pages/DataCollection/map.html" // 使用相对路径指向同一目录下的地图文件
-              style={{ width: '100%', height: '400px', border: 'none' }}
-            ></iframe>
+            <div id="worldMap" style={{ width: '100%', height: '400px' }}></div>
+          </Card>
+        </Col>
+      </Row>
+
+      <Row gutter={16} style={{ marginTop: '20px' }}>
+        {/* 列表 */}
+        <Col span={24}>
+          <Card title="数据列表" style={{ height: '100%' }}>
+            <Table
+              columns={[
+                { title: '编号', dataIndex: 'id', key: 'id' },
+                { title: '名称', dataIndex: 'name', key: 'name' },
+                { title: '描述', dataIndex: 'description', key: 'description' },
+              ]}
+              dataSource={[
+                { key: '1', id: '001', name: '数据项1', description: '这是数据项1的描述' },
+                { key: '2', id: '002', name: '数据项2', description: '这是数据项2的描述' },
+                { key: '3', id: '003', name: '数据项3', description: '这是数据项3的描述' },
+                { key: '4', id: '004', name: '数据项4', description: '这是数据项4的描述' },
+                { key: '5', id: '005', name: '数据项5', description: '这是数据项5的描述' },
+              ]}
+              pagination={{ pageSize: 5 }}
+            />
           </Card>
         </Col>
       </Row>

@@ -1,8 +1,10 @@
+import { getNodeDistribution } from '@/services/database';
 import { Card, Col, Popover, Row } from 'antd';
 import ReactECharts from 'echarts-for-react';
 import React, { useEffect, useRef, useState } from 'react';
 import Globe from 'react-globe.gl';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
+import { useRequest } from 'umi';
 import './style.less';
 
 const SituationAwareness: React.FC = () => {
@@ -14,15 +16,24 @@ const SituationAwareness: React.FC = () => {
     lng: number;
     size: number;
     city: string;
+    country: string;
   }
 
-  const nodesData: NodeData[] = [
-    { lat: 37.7749, lng: -122.4194, size: 2.7, city: 'San Francisco' },
-    { lat: 40.7128, lng: -74.006, size: 2, city: 'New York' },
-    { lat: 51.5074, lng: -0.1278, size: 2.3, city: 'London' },
-    { lat: 35.6895, lng: 139.6917, size: 2.5, city: 'Tokyo' },
-    { lat: 48.8566, lng: 2.3522, size: 2.6, city: 'Paris' },
-  ];
+  const { data, loading } = useRequest(getNodeDistribution);
+  const [nodesData, setNodesData] = useState<NodeData[]>([]);
+
+  useEffect(() => {
+    if (data) {
+      const processedData = data.map((item) => ({
+        lat: item.latitude,
+        lng: item.longitude,
+        size: item.ipCount,
+        city: item.city,
+        country: item.country,
+      }));
+      setNodesData(processedData);
+    }
+  }, [data]);
 
   const columnData = [
     { month: '2023-11', count: 30 },
@@ -49,20 +60,17 @@ const SituationAwareness: React.FC = () => {
     '185.100.87.202',
   ]);
 
-  // 模拟每隔2秒添加一个新IP,传入数据在这里
   useEffect(() => {
     const interval = setInterval(() => {
       const newIp = `192.168.0.${Math.floor(Math.random() * 255)}`;
       setIpList((prev) => {
         const updated = [newIp, ...prev];
-        return updated.slice(0, 4); // 保证最多显示 4 个
+        return updated.slice(0, 4);
       });
     }, 2000);
 
     return () => clearInterval(interval);
   }, []);
-
-  // ECharts 配置项
 
   const newsData = [
     {
@@ -126,7 +134,6 @@ const SituationAwareness: React.FC = () => {
 
   return (
     <>
-      {/* 遮罩层 */}
       {openPopoverIndex !== null && (
         <div
           onClick={() => setOpenPopoverIndex(null)}
@@ -147,6 +154,7 @@ const SituationAwareness: React.FC = () => {
           <Col span={14}>
             <Card
               title="全球暗网节点分布"
+              loading={loading}
               bodyStyle={{
                 padding: 0,
                 background: '#000',
@@ -188,8 +196,11 @@ const SituationAwareness: React.FC = () => {
                     const data = d as NodeData;
                     return `
                       <div style="background-color: rgba(255,255,255,0.95); color: #000; padding: 8px; border-radius: 4px; font-family: Arial; font-size: 12px;">
-                        <strong>${data.city}</strong><br/>
-                        <strong>节点数量: ${data.size}</strong>
+                        <strong>城市: ${data.city}</strong><br/>
+                        <strong>国家: ${data.country}</strong><br/>
+                        <strong>IP数量: ${data.size}</strong><br/>
+                        <strong>经度: ${data.lng.toFixed(2)}</strong><br/>
+                        <strong>纬度: ${data.lat.toFixed(2)}</strong>
                       </div>
                     `;
                   }}
@@ -238,7 +249,7 @@ const SituationAwareness: React.FC = () => {
                     >
                       <div
                         onClick={(e) => {
-                          e.stopPropagation(); // 避免遮罩触发
+                          e.stopPropagation();
                           setOpenPopoverIndex(index);
                         }}
                         style={{
