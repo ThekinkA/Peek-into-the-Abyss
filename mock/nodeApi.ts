@@ -39,4 +39,41 @@ export default {
       });
     }
   },
+
+  'GET /api/node/torprofile': async (req: Request, res: Response) => {
+    try {
+      const [rows] = await pool.query(`
+        SELECT 
+          IP,
+          name,
+          type,
+          nikename,
+          release_date,
+          release_time,
+          ORPort,
+          DirPort,
+          des_hash,
+          fea_label,
+          Tor_ver,
+          protocol_ver,
+          width_rec,
+          status_state,
+          status_reason,
+          OS,
+          microdesc
+        FROM torprofile
+        LIMIT 100
+      `);
+
+      res.send({
+        success: true,
+        data: rows,
+      });
+    } catch (error) {
+      res.status(500).send({
+        success: false,
+        errorMessage: error.message,
+      });
+    }
+  },
 };

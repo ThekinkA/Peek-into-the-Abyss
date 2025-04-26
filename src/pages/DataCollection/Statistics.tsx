@@ -6,11 +6,15 @@ import {
 } from '@ant-design/icons';
 import { Card, Col, Row, Table } from 'antd';
 import * as echarts from 'echarts';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import EChartComponent from '../../components/EChartComponent'; // 引入封装的组件
+import { getTorProfile } from '@/services/database';
 import './Statistics.css';
 
 const Statistics: React.FC = () => {
+  const [torProfileData, setTorProfileData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
   useEffect(() => {
     // 初始化 ECharts 实例
     const myChart = echarts.init(document.getElementById('worldMap') as HTMLElement);
@@ -67,6 +71,21 @@ const Statistics: React.FC = () => {
       .catch((error) => {
         console.error('加载世界地图数据失败:', error);
       });
+
+    const fetchTorProfile = async () => {
+      setLoading(true);
+      try {
+        const response = await getTorProfile();
+        if (response.success) {
+          setTorProfileData(response.data);
+        }
+      } catch (error) {
+        console.error('获取 Tor 节点数据失败:', error);
+      }
+      setLoading(false);
+    };
+
+    fetchTorProfile();
   }, []);
 
   // 表格数据
@@ -468,21 +487,25 @@ const Statistics: React.FC = () => {
       <Row gutter={16} style={{ marginTop: '20px' }}>
         {/* 列表 */}
         <Col span={24}>
-          <Card title="数据列表" style={{ height: '100%' }}>
+          <Card title="Tor 节点数据列表" style={{ height: '100%' }}>
             <Table
               columns={[
-                { title: '编号', dataIndex: 'id', key: 'id' },
+                { title: 'IP', dataIndex: 'IP', key: 'IP' },
                 { title: '名称', dataIndex: 'name', key: 'name' },
-                { title: '描述', dataIndex: 'description', key: 'description' },
+                { title: '类型', dataIndex: 'type', key: 'type' },
+                { title: '昵称', dataIndex: 'nikename', key: 'nikename' },
+                { title: '发布日期', dataIndex: 'release_date', key: 'release_date' },
+                { title: '发布时间', dataIndex: 'release_time', key: 'release_time' },
+                { title: 'OR端口', dataIndex: 'ORPort', key: 'ORPort' },
+                { title: 'Dir端口', dataIndex: 'DirPort', key: 'DirPort' },
+                { title: 'Tor版本', dataIndex: 'Tor_ver', key: 'Tor_ver' },
+                { title: '状态', dataIndex: 'status_state', key: 'status_state' },
+                { title: '操作系统', dataIndex: 'OS', key: 'OS' },
               ]}
-              dataSource={[
-                { key: '1', id: '001', name: '数据项1', description: '这是数据项1的描述' },
-                { key: '2', id: '002', name: '数据项2', description: '这是数据项2的描述' },
-                { key: '3', id: '003', name: '数据项3', description: '这是数据项3的描述' },
-                { key: '4', id: '004', name: '数据项4', description: '这是数据项4的描述' },
-                { key: '5', id: '005', name: '数据项5', description: '这是数据项5的描述' },
-              ]}
-              pagination={{ pageSize: 5 }}
+              dataSource={torProfileData}
+              loading={loading}
+              pagination={{ pageSize: 10 }}
+              scroll={{ x: 1500 }}
             />
           </Card>
         </Col>
