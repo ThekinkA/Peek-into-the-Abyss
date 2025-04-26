@@ -74,7 +74,7 @@ const SituationAwareness: React.FC = () => {
 
   const newsData = [
     {
-      title: '王昌坤致使隔壁母猪怀孕，科学界惊呼生物学被改写',
+      title: '科学界惊呼生物学被改写',
       date: '2077-13-31',
     },
     {
@@ -180,9 +180,20 @@ const SituationAwareness: React.FC = () => {
                   bumpImageUrl="//unpkg.com/three-globe/example/img/earth-topology.png"
                   backgroundImageUrl="//unpkg.com/three-globe/example/img/night-sky.png"
                   pointsData={nodesData}
-                  pointAltitude={(d) => (d as NodeData).size / 5}
-                  pointColor={() => '#FCDA8C'}
-                  pointRadius={0.8}
+                  pointAltitude={() => 0.2}
+                  pointColor={(d) => {
+                    const data = d as NodeData;
+                    const minSize = Math.min(...nodesData.map(n => n.size));
+                    const maxSize = Math.max(...nodesData.map(n => n.size));
+                    const t = (data.size - minSize) / (maxSize - minSize || 1); // 避免除以0
+
+                    const r = 255;
+                    const g = Math.round(255 * (1 - t));
+                    const b = 0;
+
+                    return `rgba(${r},${g},${b},0.7)`;
+                  }}
+                  pointRadius={0.2}
                   pointsMerge={false}
                   pointsTransitionDuration={1000}
                   atmosphereColor="rgba(255,100,100,0.3)"
