@@ -74,7 +74,7 @@ const SituationAwareness: React.FC = () => {
 
   const newsData = [
     {
-      title: '王昌坤致使隔壁母猪怀孕，科学界惊呼生物学被改写',
+      title: '科学界惊呼生物学被改写',
       date: '2077-13-31',
     },
     {
