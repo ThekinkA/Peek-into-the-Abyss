@@ -8,12 +8,14 @@ import { Card, Col, Row, Table } from 'antd';
 import * as echarts from 'echarts';
 import React, { useEffect, useState } from 'react';
 import EChartComponent from '../../components/EChartComponent'; // 引入封装的组件
-import { getTorProfile } from '@/services/database';
+import { getTorProfile, getLatestTime } from '@/services/database';
 import './Statistics.css';
 
 const Statistics: React.FC = () => {
   const [torProfileData, setTorProfileData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [latestTime, setLatestTime] = useState<string>('');
+  const [timeLoading, setTimeLoading] = useState(false);
 
   useEffect(() => {
     // 初始化 ECharts 实例
@@ -77,7 +79,12 @@ const Statistics: React.FC = () => {
       try {
         const response = await getTorProfile();
         if (response.success) {
-          setTorProfileData(response.data);
+          // 添加递增的ID
+          const dataWithId = response.data.map((item, index) => ({
+            ...item,
+            id: index + 1,
+          }));
+          setTorProfileData(dataWithId);
         }
       } catch (error) {
         console.error('获取 Tor 节点数据失败:', error);
@@ -85,68 +92,44 @@ const Statistics: React.FC = () => {
       setLoading(false);
     };
 
+    const fetchLatestTime = async () => {
+      setTimeLoading(true);
+      try {
+        const response = await getLatestTime();
+        if (response.success) {
+          setLatestTime(response.data);
+        }
+      } catch (error) {
+        console.error('获取最新时间失败:', error);
+      }
+      setTimeLoading(false);
+    };
+
     fetchTorProfile();
+    fetchLatestTime();
   }, []);
 
   // 表格数据
   const columns = [
     {
-      title: '排名',
-      dataIndex: 'rank',
-      key: 'rank',
+      title: 'ID',
+      dataIndex: 'id',
+      key: 'id',
     },
     {
-      title: '搜索关键词',
-      dataIndex: 'keyword',
-      key: 'keyword',
+      title: 'IP',
+      dataIndex: 'IP',
+      key: 'IP',
     },
     {
-      title: '用户数',
-      dataIndex: 'users',
-      key: 'users',
+      title: 'Tor版本',
+      dataIndex: 'Tor_ver',
+      key: 'Tor_ver',
     },
     {
-      title: '周涨幅',
-      dataIndex: 'growth',
-      key: 'growth',
-    },
-  ];
-
-  const data = [
-    {
-      key: '1',
-      rank: 1,
-      keyword: '新款连衣裙',
-      users: 2234,
-      growth: '128% ↑',
-    },
-    {
-      key: '2',
-      rank: 2,
-      keyword: '四件套',
-      users: 2404,
-      growth: '3% ↑',
-    },
-    {
-      key: '3',
-      rank: 3,
-      keyword: '男士手包',
-      users: 1231,
-      growth: '58% ↑',
-    },
-    {
-      key: '4',
-      rank: 4,
-      keyword: '耳机',
-      users: 1021,
-      growth: '58% ↓',
-    },
-    {
-      key: '5',
-      rank: 5,
-      keyword: '短裤',
-      users: 800,
-      growth: '58% ↑',
+      title: '特征标签',
+      dataIndex: 'fea_label',
+      key: 'fea_label',
     },
   ];
 
@@ -237,9 +220,9 @@ const Statistics: React.FC = () => {
                 </Card>
               </Col>
               <Col span={8}>
-                <Card title="最近更新时间" style={{ height: '100%' }}>
+                <Card title="最近更新时间" style={{ height: '100%' }} loading={timeLoading}>
                   <div style={{ fontSize: '16px', textAlign: 'center', padding: '20px' }}>
-                    2025-04-17 14:30:00
+                    {latestTime || '暂无数据'}
                   </div>
                 </Card>
               </Col>
@@ -253,7 +236,8 @@ const Statistics: React.FC = () => {
             </Row>
             <Table
               columns={columns}
-              dataSource={data}
+              dataSource={torProfileData}
+              loading={loading}
               pagination={{ pageSize: 5 }}
               style={{ marginTop: '20px' }}
             />

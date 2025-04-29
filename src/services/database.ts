@@ -11,3 +11,7 @@ export async function getTorProfile() {
 export async function getLatestIPs() {
   return request<API.ApiResponse<string[]>>('/api/node/latest-ips');
 }
+
+export async function getLatestTime() {
+  return request<API.ApiResponse<string>>('/api/node/latest-time');
+}

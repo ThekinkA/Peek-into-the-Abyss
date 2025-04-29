@@ -97,4 +97,25 @@ export default {
       });
     }
   },
+
+  'GET /api/node/latest-time': async (req: Request, res: Response) => {
+    try {
+      const [rows] = await pool.query(`
+        SELECT time_value 
+        FROM latest_time 
+        ORDER BY time_value DESC 
+        LIMIT 1
+      `);
+
+      res.send({
+        success: true,
+        data: rows[0]?.time_value || '',
+      });
+    } catch (error: any) {
+      res.status(500).send({
+        success: false,
+        errorMessage: error.message,
+      });
+    }
+  },
 };
