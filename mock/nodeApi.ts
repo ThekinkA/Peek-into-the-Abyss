@@ -139,4 +139,81 @@ export default {
       });
     }
   },
+
+  'GET /api/node/c-class-alive': async (req: Request, res: Response) => {
+    try {
+      const { originalIp } = req.query;
+      const [rows] = await pool.query(`
+        SELECT 
+          id,
+          original_ip,
+          alive_count,
+          dead_count,
+          host1,
+          host2,
+          host3,
+          host4,
+          host5
+        FROM c_class_alive
+        WHERE original_ip = ?
+      `, [originalIp]);
+
+      if (rows.length === 0) {
+        res.send({
+          success: true,
+          data: null,
+          message: '数据库中无相关数据'
+        });
+        return;
+      }
+
+      res.send({
+        success: true,
+        data: rows[0]
+      });
+    } catch (error) {
+      res.status(500).send({
+        success: false,
+        errorMessage: '链接数据库失败'
+      });
+    }
+  },
+
+  'GET /api/node/default-c-class-alive': async (req: Request, res: Response) => {
+    try {
+      const [rows] = await pool.query(`
+        SELECT 
+          id,
+          original_ip,
+          alive_count,
+          dead_count,
+          host1,
+          host2,
+          host3,
+          host4,
+          host5
+        FROM c_class_alive
+        LIMIT 1
+      `);
+
+      if (rows.length === 0) {
+        res.send({
+          success: true,
+          data: null,
+          message: '数据库中无相关数据'
+        });
+        return;
+      }
+
+      res.send({
+        success: true,
+        data: rows[0]
+      });
+    } catch (error) {
+      res.status(500).send({
+        success: false,
+        errorMessage: '链接数据库失败'
+      });
+    }
+  },
 };

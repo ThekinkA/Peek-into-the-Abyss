@@ -19,3 +19,13 @@ export async function getLatestTime() {
 export async function getIpCounts() {
   return request<API.ApiResponse<{valid_after_time: string, ip_num: number}[]>>('/api/node/ip-counts');
 }
+
+export async function getCClassAliveData(originalIp: string) {
+  return request<API.ApiResponse<API.CClassAliveData>>('/api/node/c-class-alive', {
+    params: { originalIp },
+  });
+}
+
+export async function getDefaultCClassAliveData() {
+  return request<API.ApiResponse<API.CClassAliveData>>('/api/node/default-c-class-alive');
+}
