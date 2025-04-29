@@ -118,4 +118,25 @@ export default {
       });
     }
   },
+
+  'GET /api/node/ip-counts': async (req: Request, res: Response) => {
+    try {
+      const [rows] = await pool.query(`
+        SELECT valid_after_time, ip_num 
+        FROM ip_counts 
+        ORDER BY valid_after_time DESC 
+        LIMIT 6
+      `);
+
+      res.send({
+        success: true,
+        data: rows,
+      });
+    } catch (error) {
+      res.status(500).send({
+        success: false,
+        errorMessage: error.message,
+      });
+    }
+  },
 };

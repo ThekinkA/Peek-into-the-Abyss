@@ -1,4 +1,4 @@
-import { getNodeDistribution, getLatestIPs } from '@/services/database';
+import { getNodeDistribution, getLatestIPs, getIpCounts } from '@/services/database';
 import { Card, Col, Popover, Row } from 'antd';
 import ReactECharts from 'echarts-for-react';
 import React, { useEffect, useRef, useState } from 'react';
@@ -35,14 +35,23 @@ const SituationAwareness: React.FC = () => {
     }
   }, [data]);
 
-  const columnData = [
-    { month: '2023-11', count: 30 },
-    { month: '2023-12', count: 45 },
-    { month: '2024-01', count: 50 },
-    { month: '2024-02', count: 40 },
-    { month: '2024-03', count: 60 },
-    { month: '2024-04', count: 55 },
-  ];
+  const { data: ipCountsData } = useRequest(getIpCounts);
+  const [columnData, setColumnData] = useState<{month: string, count: number}[]>([]);
+
+  // 修改日期处理部分
+  useEffect(() => {
+    if (ipCountsData) {
+      const processedData = ipCountsData.map(item => ({
+        month: new Date(item.valid_after_time).toLocaleDateString('zh-CN', {
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+        }).replace(/\//g, '月').replace(',', '日') + '时',
+        count: item.ip_num
+      }));
+      setColumnData(processedData.reverse());
+    }
+  }, [ipCountsData]);
 
   useEffect(() => {
     if (globeRef.current) {
@@ -81,6 +90,7 @@ const SituationAwareness: React.FC = () => {
     },
   ];
 
+  // 修改图表配置部分
   const columnChartOption = {
     tooltip: {
       trigger: 'item',
@@ -98,6 +108,8 @@ const SituationAwareness: React.FC = () => {
       data: columnData.map((d) => d.month),
       axisLabel: {
         color: '#FFD5D5',
+        interval: 0,  // 显示所有标签
+        rotate: 30    // 旋转标签以防重叠
       },
       axisLine: {
         lineStyle: { color: '#FFD5D5' },
@@ -105,12 +117,21 @@ const SituationAwareness: React.FC = () => {
     },
     yAxis: {
       type: 'value',
+      min: 8500,      // 设置y轴最小值
+      interval: 100,  // 设置刻度间隔
       axisLabel: {
         color: '#FFD5D5',
       },
       axisLine: {
         lineStyle: { color: '#FFD5D5' },
       },
+      splitLine: {    // 添加网格线
+        show: true,
+        lineStyle: {
+          color: 'rgba(255,255,255,0.1)',
+          type: 'dashed'
+        }
+      }
     },
     series: [
       {
@@ -120,6 +141,11 @@ const SituationAwareness: React.FC = () => {
         barWidth: 40,
       },
     ],
+    grid: {          // 调整图表边距
+      left: '10%',
+      right: '5%',
+      bottom: '15%'  // 为旋转的x轴标签留出空间
+    }
   };
 
   return (

@@ -15,3 +15,7 @@ export async function getLatestIPs() {
 export async function getLatestTime() {
   return request<API.ApiResponse<string>>('/api/node/latest-time');
 }
+
+export async function getIpCounts() {
+  return request<API.ApiResponse<{valid_after_time: string, ip_num: number}[]>>('/api/node/ip-counts');
+}
