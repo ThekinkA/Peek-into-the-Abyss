@@ -1,4 +1,4 @@
-import { getNodeDistribution } from '@/services/database';
+import { getNodeDistribution, getLatestIPs } from '@/services/database';
 import { Card, Col, Popover, Row } from 'antd';
 import ReactECharts from 'echarts-for-react';
 import React, { useEffect, useRef, useState } from 'react';
@@ -53,24 +53,14 @@ const SituationAwareness: React.FC = () => {
     }
   }, []);
 
-  const [ipList, setIpList] = useState<string[]>([
-    '185.220.101.1',
-    '104.244.73.2',
-    '192.42.116.15',
-    '185.100.87.202',
-  ]);
+  const { data: latestIPsData, loading: latestIPsLoading } = useRequest(getLatestIPs);
+  const [ipList, setIpList] = useState<string[]>([]);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      const newIp = `192.168.0.${Math.floor(Math.random() * 255)}`;
-      setIpList((prev) => {
-        const updated = [newIp, ...prev];
-        return updated.slice(0, 4);
-      });
-    }, 2000);
-
-    return () => clearInterval(interval);
-  }, []);
+    if (latestIPsData) {
+      setIpList(latestIPsData);
+    }
+  }, [latestIPsData]);
 
   const newsData = [
     {
@@ -327,6 +317,7 @@ const SituationAwareness: React.FC = () => {
             <Card
               title="新增已检测 IP 展示"
               bodyStyle={{ background: '#070707', color: '#fff', height: '270px' }}
+              loading={latestIPsLoading}
             >
               <TransitionGroup style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {ipList.map((ip) => (

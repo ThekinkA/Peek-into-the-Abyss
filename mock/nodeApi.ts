@@ -76,4 +76,25 @@ export default {
       });
     }
   },
+
+  'GET /api/node/latest-ips': async (req: Request, res: Response) => {
+    try {
+      const [rows] = await pool.query(`
+        SELECT IP 
+        FROM torprofile 
+        ORDER BY release_date DESC, release_time DESC 
+        LIMIT 5
+      `);
+
+      res.send({
+        success: true,
+        data: rows.map((row: any) => row.IP),
+      });
+    } catch (error: any) {
+      res.status(500).send({
+        success: false,
+        errorMessage: error.message,
+      });
+    }
+  },
 };

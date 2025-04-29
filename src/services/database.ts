@@ -7,3 +7,7 @@ export async function getNodeDistribution() {
 export async function getTorProfile() {
   return request<API.ApiResponse<API.TorProfile[]>>('/api/node/torprofile');
 }
+
+export async function getLatestIPs() {
+  return request<API.ApiResponse<string[]>>('/api/node/latest-ips');
+}
