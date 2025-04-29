@@ -193,7 +193,7 @@ const VulnerabilityInfo: React.FC = () => {
                         </Button>
                     </Space>
                 </Col>
-                <Col span={11}>
+                <Col span={10}>
                 <CSSTransition in={show} timeout={300} classNames="fade" unmountOnExit>
                     <div className="vulnerability-content">
                         <div className="data-group">
@@ -233,7 +233,7 @@ const VulnerabilityInfo: React.FC = () => {
                     </div>
                 </CSSTransition>
             </Col>
-                <Col span={11}>
+                <Col span={10}>
                     <div id="bar-chart" style={{ height: '400px', width: '100%' }}></div>
                 </Col>
             </Row>
