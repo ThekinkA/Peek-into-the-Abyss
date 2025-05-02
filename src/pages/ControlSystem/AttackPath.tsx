@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button, Space, Card, Tag, Modal, Row, Col, Input, message } from 'antd';
 import { CSSTransition } from 'react-transition-group';
 import * as echarts from 'echarts';
-import NeoVis from 'neovis.js'; // 用于Neo4j图可视化
+import * as neo4j from 'neo4j-driver';
 import './AttackPath.less';
 
 const { Search } = Input;
@@ -12,7 +12,7 @@ const VulnerabilityInfo: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [detailData, setDetailData] = useState<{ cve: string; dkv: string } | null>(null);
     const [chartShow, setChartShow] = useState(false);
-    const [targetIp, setTargetIp] = useState('192.168.1.5'); // 默认IP
+    const [targetIp, setTargetIp] = useState('101.100.141.137'); // 默认IP
     const [recentIps, setRecentIps] = useState([
         '192.168.1.5',
         '192.168.1.4',
@@ -20,6 +20,12 @@ const VulnerabilityInfo: React.FC = () => {
         '192.168.1.2',
         '192.168.1.1',
     ]);
+    const [driver, setDriver] = useState<neo4j.Driver | null>(null);
+    const [clearAll, setClearAll] = useState(true);
+    const [echartsNode, setEchartsNode] = useState([]); // 节点数组
+    const [nodesRelation, setNodesRelation] = useState([]); // 关系线数组
+    const [category, setCategory] = useState([]); // echarts 图例数据数
+    const [knowlegGraphshow, setKnowlegGraphshow] = useState(false); // 控制知识图谱显示
 
     // 模拟的数据
     const cveData1 = ['CVE-2004-0001', 'CVE-2009-2321', 'CVE-2016-1001', 'CVE-2020-565', 'CVE-2022-1234', 'CVE-2023-6789', 'CVE-2024-1234'];
@@ -27,9 +33,18 @@ const VulnerabilityInfo: React.FC = () => {
     const cveData = ['CVE'];
     const dkvData = ['DKV'];
 
+    // 初始化 Neo4j 驱动
+    useEffect(() => {
+        const neo4jDriver = neo4j.driver('bolt://localhost:7687', neo4j.auth.basic('neo4j', 'wck330328'));
+        setDriver(neo4jDriver);
+        return () => {
+            neo4jDriver.close();
+        };
+    }, []);
+
     useEffect(() => {
         renderNeo4jGraph();
-    }, [targetIp]); // 每次 targetIp 变化时刷新Neo4j图
+    }, [echartsNode, nodesRelation, category]);
 
     const handleShow = () => {
         setLoading(true);
@@ -55,42 +70,42 @@ const VulnerabilityInfo: React.FC = () => {
         const chartDom = document.getElementById('bar-chart') as HTMLElement;
         const myChart = echarts.init(chartDom);
 
-        const cveCounts= [10];
+        const cveCounts = [10];
         const dkvCounts = [5];
         const option = {
-          colors: ['#ff7373', '#52c41a'],
-          tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }},
-          legend: {
-            data: ['CVE数量', 'DKV数量'],
-            textStyle: { color: '#FFFFFF' },
-          },
-          grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
-          xAxis: [{ type: 'value' }],
-          yAxis: [{
-            type: 'category',
-            data: cveData.map((cve, index) => `${cve} | ${dkvData[index]}`),
-            axisLabel: { interval: 0, rotate: 30 },
-          }],
-          series: [
-            {
-              name: 'CVE数量',
-              type: 'bar',
-              stack: '总量',
-              barWidth: 40,
-              label: { show: true, position: 'insideRight' },
-              emphasis: { focus: 'series' },
-              data: cveCounts,
+            colors: ['#ff7373', '#52c41a'],
+            tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }},
+            legend: {
+                data: ['CVE数量', 'DKV数量'],
+                textStyle: { color: '#FFFFFF' },
             },
-            {
-              name: 'DKV数量',
-              type: 'bar',
-              stack: '总量',
-              barWidth: 40,
-              label: { show: true, position: 'insideLeft' },
-              emphasis: { focus: 'series' },
-              data: dkvCounts,
-            }
-          ]
+            grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+            xAxis: [{ type: 'value' }],
+            yAxis: [{
+                type: 'category',
+                data: cveData.map((cve, index) => `${cve} | ${dkvData[index]}`),
+                axisLabel: { interval: 0, rotate: 30 },
+            }],
+            series: [
+                {
+                    name: 'CVE数量',
+                    type: 'bar',
+                    stack: '总量',
+                    barWidth: 40,
+                    label: { show: true, position: 'insideRight' },
+                    emphasis: { focus: 'series' },
+                    data: cveCounts,
+                },
+                {
+                    name: 'DKV数量',
+                    type: 'bar',
+                    stack: '总量',
+                    barWidth: 40,
+                    label: { show: true, position: 'insideLeft' },
+                    emphasis: { focus: 'series' },
+                    data: dkvCounts,
+                }
+            ]
         };
 
         option && myChart.setOption(option);
@@ -98,25 +113,6 @@ const VulnerabilityInfo: React.FC = () => {
         return () => {
             myChart.dispose();
         };
-    };
-
-    const renderNeo4jGraph = () => {
-        const config = {
-            containerId: "neo4j-graph",
-            neo4j: {
-                serverUrl: "bolt://localhost:7687",
-                serverUser: "neo4j",
-                serverPassword: "wck330328",
-            },
-            labels: {
-                IP: {
-                    caption: "address",
-                },
-            },
-            initialCypher: `MATCH (n:IP {address: '${targetIp}'})-[r]->(m) RETURN n,r,m`,
-        };
-        const vis = new NeoVis(config);
-        vis.render();
     };
 
     const handleSearch = (value: string) => {
@@ -131,10 +127,95 @@ const VulnerabilityInfo: React.FC = () => {
         setTargetIp(ip);
     };
 
+    // 定义执行 Cypher 查询的函数
+    // 定义执行 Cypher 查询的函数
+    const executeCypher = async () => {
+        if (!driver) return;
+        const session = driver.session();
+        const query = `MATCH (startNode:攻击路径 {节点标识符: '${targetIp}_8'})-[r]->(endNode) RETURN startNode, r, endNode`;
+
+        try {
+            const result = await session.run(query);
+            const nodes: any[] = [];
+            const links: any[] = [];
+            const nodeMap = new Map();
+
+            result.records.forEach(record => {
+                const startNode = record.get('startNode');
+                const endNode = record.get('endNode');
+                const relation = record.get('r');
+
+                const addNode = (node: any) => {
+                    const id = node.identity.toInt();
+                    if (!nodeMap.has(id)) {
+                        const nodeData = {
+                            id: id,
+                            name: node.properties.name || node.properties.节点标识符 || `节点${id}`,
+                            category: node.labels[0] || '未知',
+                            symbolSize: 50,
+                        };
+                        nodeMap.set(id, nodeData);
+                        nodes.push(nodeData);
+                    }
+                };
+
+                addNode(startNode);
+                addNode(endNode);
+
+                links.push({
+                    source: nodeMap.get(startNode.identity.toInt()).id,
+                    target: nodeMap.get(endNode.identity.toInt()).id,
+                    name: relation.type,
+                });
+            });
+
+            setEchartsNode(nodes);
+            setNodesRelation(links);
+            setCategory([...new Set(nodes.map(n => n.category))]);
+            session.close();
+        } catch (error) {
+            console.error('Cypher 执行失败', error);
+            session.close();
+        }
+    };
+
+    const renderNeo4jGraph = () => {
+        const chartDom = document.getElementById('neo4j-graph') as HTMLElement;
+        const myChart = echarts.init(chartDom);
+        const option = {
+            tooltip: {},
+            legend: { data: category },
+            series: [{
+                type: 'graph',
+                layout: 'force',
+                data: echartsNode,
+                links: nodesRelation,
+                categories: category.map(name => ({ name })),
+                roam: true,
+                label: { show: true },
+                edgeLabel: {
+                    show: true,
+                    formatter: x => x.data.name,
+                },
+                force: {
+                    repulsion: 300,
+                    edgeLength: 150,
+                }
+            }]
+        };
+        myChart.setOption(option);
+        window.addEventListener('resize', () => myChart.resize());
+    };
+
+    useEffect(() => {
+        setTimeout(() => {
+            setKnowlegGraphshow(true);
+        }, 4000);
+    }, [clearAll]);
+
     return (
         <div className="vulnerability-container">
-
-            {/* 第一行：目标IP + 搜索框 */}
+            {/* 第一行：目标IP + 搜索功能 */}
             <Row align="middle" style={{ marginBottom: '20px' }}>
                 <Col span={12}>
                     <div className="target-ip">
@@ -149,6 +230,13 @@ const VulnerabilityInfo: React.FC = () => {
                         onSearch={handleSearch}
                         style={{ maxWidth: '300px' }}
                     />
+                </Col>
+            </Row>
+
+            {/* 第二行：执行查询按钮 */}
+            <Row>
+                <Col span={24} style={{ textAlign: 'center', marginBottom: '20px' }}>
+                    <Button type="primary" onClick={executeCypher}>查询攻击路径节点</Button>
                 </Col>
             </Row>
 
@@ -181,7 +269,7 @@ const VulnerabilityInfo: React.FC = () => {
 
             {/* 第四行：漏洞信息展示 */}
             <Row>
-              <Col>
+                <Col>
                     <Space>
                         <Button 
                             type="primary" 
@@ -194,45 +282,45 @@ const VulnerabilityInfo: React.FC = () => {
                     </Space>
                 </Col>
                 <Col span={10}>
-                <CSSTransition in={show} timeout={300} classNames="fade" unmountOnExit>
-                    <div className="vulnerability-content">
-                        <div className="data-group">
-                            <h3>CVE 编号</h3>
-                            <div className="data-list" style={{gridTemplateColumns: '1fr 1fr'}}>
-                                <div className="scroll-container">
-                                    {cveData1.map((item, index) => (
-                                        <Card
-                                            key={item}
-                                            className="data-card"
-                                            hoverable
-                                            onClick={() => handleDetail(item, dkvData1[index])}
-                                        >
-                                            <Tag color="#108ee9">{item}</Tag>
-                                        </Card>
-                                    ))}
+                    <CSSTransition in={show} timeout={300} classNames="fade" unmountOnExit>
+                        <div className="vulnerability-content">
+                            <div className="data-group">
+                                <h3>CVE 编号</h3>
+                                <div className="data-list" style={{gridTemplateColumns: '1fr 1fr'}}>
+                                    <div className="scroll-container">
+                                        {cveData1.map((item, index) => (
+                                            <Card
+                                                key={item}
+                                                className="data-card"
+                                                hoverable
+                                                onClick={() => handleDetail(item, dkvData1[index])}
+                                            >
+                                                <Tag color="#108ee9">{item}</Tag>
+                                            </Card>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="data-group">
+                                <h3>DKV 编号</h3>
+                                <div className="data-list">
+                                    <div className="scroll-container">
+                                        {dkvData1.map((item, index) => (
+                                            <Card
+                                                key={item}
+                                                className="data-card"
+                                                hoverable
+                                                onClick={() => handleDetail(cveData1[index], item)}
+                                            >
+                                                <Tag color="#87d068">{item}</Tag>
+                                            </Card>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div className="data-group">
-                            <h3>DKV 编号</h3>
-                            <div className="data-list">
-                                <div className="scroll-container">
-                                    {dkvData1.map((item, index) => (
-                                        <Card
-                                            key={item}
-                                            className="data-card"
-                                            hoverable
-                                            onClick={() => handleDetail(cveData1[index], item)}
-                                        >
-                                            <Tag color="#87d068">{item}</Tag>
-                                        </Card>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </CSSTransition>
-            </Col>
+                    </CSSTransition>
+                </Col>
                 <Col span={10}>
                     <div id="bar-chart" style={{ height: '400px', width: '100%' }}></div>
                 </Col>
@@ -251,7 +339,6 @@ const VulnerabilityInfo: React.FC = () => {
                     <p><strong>漏洞描述：</strong>这是一个示例漏洞，具体描述内容可根据实际数据填充。</p>
                 </Modal>
             )}
-
         </div>
     );
 };

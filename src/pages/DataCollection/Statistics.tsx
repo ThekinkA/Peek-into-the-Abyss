@@ -258,7 +258,7 @@ const Statistics: React.FC = () => {
       {/* 下半部分：折线图和表格 */}
       <Row gutter={16} style={{ marginTop: '20px' }}>
         <Col span={12}>
-          <Card title="数据统计" style={{ height: '100%' }}>
+          <Card title="Tor官网数据统计" style={{ height: '100%' }}>
             <Row gutter={16} style={{ marginTop: '20px' }}>
               <Col span={8}>
                 <Card title="第 XXX 次更新 Tor 官网数据" style={{ height: '100%' }}>
@@ -379,7 +379,7 @@ const Statistics: React.FC = () => {
       <Row gutter={16} style={{ marginTop: '20px' }}>
         {/* 折线图 */}
         <Col span={18}>
-          <Card title="活动实时交易情况" style={{ height: '100%' }}>
+          <Card title="节点存活情况统计图" style={{ height: '100%' }}>
             <EChartComponent
               option={{
                 tooltip: {
@@ -389,7 +389,7 @@ const Statistics: React.FC = () => {
                   },
                 },
                 legend: {
-                  data: ['蓝色', '绿色'],
+                  data: ['存活', '未存活'],
                 },
                 xAxis: {
                   type: 'category',
@@ -401,7 +401,7 @@ const Statistics: React.FC = () => {
                 },
                 series: [
                   {
-                    name: '蓝色',
+                    name: '存活',
                     type: 'line',
                     smooth: true,
                     data: [2000, 3000, 2500, 4000, 3500, 3000, 4000],
@@ -413,7 +413,7 @@ const Statistics: React.FC = () => {
                     },
                   },
                   {
-                    name: '绿色',
+                    name: '未存活',
                     type: 'line',
                     smooth: true,
                     data: [3000, 2000, 3000, 2500, 2000, 3500, 3000],
@@ -433,7 +433,7 @@ const Statistics: React.FC = () => {
 
         {/* 饼状图 */}
         <Col span={6}>
-          <Card title="销售额类别占比" style={{ height: '100%' }}>
+          <Card title="存活/未存活 节点占比" style={{ height: '100%' }}>
             <EChartComponent
               option={{
                 tooltip: {
@@ -488,7 +488,7 @@ const Statistics: React.FC = () => {
       <Row gutter={16} style={{ marginTop: '20px' }}>
         {/* 柱状图 */}
         <Col span={8}>
-          <Card title="柱状图示例" style={{ height: '100%' }}>
+          <Card title="节点全球地域分布情况" style={{ height: '100%' }}>
             <EChartComponent
               option={{
                 tooltip: {
@@ -522,7 +522,7 @@ const Statistics: React.FC = () => {
 
         {/* 世界地图 */}
         <Col span={16}>
-          <Card title="2D 世界地图" style={{ height: '100%' }}>
+          <Card title="分布情况展示" style={{ height: '100%' }}>
             <div id="worldMap" style={{ width: '100%', height: '400px' }}></div>
           </Card>
         </Col>

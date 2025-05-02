@@ -184,7 +184,7 @@ const NodeResults = () => {
           </Col>
 
           <Col span={12}>
-            <Card title="知识图谱（Family 结构）">
+            <Card title="知识图谱">
               <div id="neo4jGraph" style={{ width: '100%', height: '400px' }}></div>
             </Card>
           </Col>
