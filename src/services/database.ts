@@ -33,3 +33,14 @@ export async function getDefaultCClassAliveData() {
 export async function getNodeCategoryStats() {
   return request<API.ApiResponse<{category: string, count: number}[]>>('/api/node/category-stats');
 }
+
+export async function getNodeCategoryDetails(category: string) {
+  return request<API.ApiResponse<{
+    IP: string;
+    status: string;
+    country: string;
+    bandwidth: string;
+  }[]>>('/api/node/category-details', {
+    params: { category },
+  });
+}

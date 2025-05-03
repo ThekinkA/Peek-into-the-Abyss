@@ -3,7 +3,7 @@ import { Card, Col, Row, Statistic, Button, Tooltip, Table } from 'antd';
 import { GlobalOutlined } from '@ant-design/icons';
 import * as echarts from 'echarts';
 import './TorOverview.css'; // 自定义样式文件
-import { getNodeCategoryStats } from '@/services/database';
+import { getNodeCategoryStats, getNodeCategoryDetails } from '@/services/database';
 
 // 模拟带国家信息的节点数据
 const entryNodes = [
@@ -37,6 +37,13 @@ const typeColorMap = {
   exit: '#2ECC71',
 };
 
+// 节点类型映射
+const categoryMap = {
+  entry: 'Guard',
+  relay: 'Middle',
+  exit: 'Exit'
+};
+
 const TorNodeVisualization = () => {
   const [showDetails, setShowDetails] = useState({
     entry: false,
@@ -46,14 +53,19 @@ const TorNodeVisualization = () => {
   const [mapData, setMapData] = useState({}); // 定义地图数据
   const [activeType, setActiveType] = useState('all'); // 当前显示的节点类型
   const [pagination, setPagination] = useState({
-    entry: { current: 1, pageSize: 3 },
-    relay: { current: 1, pageSize: 3 },
-    exit: { current: 1, pageSize: 3 },
+    entry: { current: 1, pageSize: 10 },
+    relay: { current: 1, pageSize: 10 },
+    exit: { current: 1, pageSize: 10 },
   });
   const [nodeStats, setNodeStats] = useState({
     entry: 0,
     relay: 0,
     exit: 0
+  });
+  const [nodeDetails, setNodeDetails] = useState({
+    entry: [],
+    relay: [],
+    exit: []
   });
 
   // 获取节点分类统计
@@ -80,6 +92,28 @@ const TorNodeVisualization = () => {
     };
     fetchNodeStats();
   }, []);
+
+  // 获取节点详细信息
+  const fetchNodeDetails = async (type: 'entry' | 'relay' | 'exit') => {
+    try {
+      const response = await getNodeCategoryDetails(categoryMap[type]);
+      if (response.success && response.data) {
+        setNodeDetails(prev => ({
+          ...prev,
+          [type]: response.data
+        }));
+      }
+    } catch (error) {
+      console.error('获取节点详情失败:', error);
+    }
+  };
+
+  // 当显示详情时获取数据
+  useEffect(() => {
+    if (showDetails.entry) fetchNodeDetails('entry');
+    if (showDetails.relay) fetchNodeDetails('relay');
+    if (showDetails.exit) fetchNodeDetails('exit');
+  }, [showDetails]);
 
   // 初始化地图数据
   useEffect(() => {
@@ -288,7 +322,7 @@ const TorNodeVisualization = () => {
         <Col span={8}>
           <NodeCard
             type="entry"
-            data={entryNodes}
+            data={nodeDetails.entry}
             showDetails={showDetails.entry}
             pagination={pagination.entry}
             onToggle={() => setShowDetails((prev) => ({ ...prev, entry: !prev.entry }))}
@@ -299,7 +333,7 @@ const TorNodeVisualization = () => {
         <Col span={8}>
           <NodeCard
             type="relay"
-            data={relayNodes}
+            data={nodeDetails.relay}
             showDetails={showDetails.relay}
             pagination={pagination.relay}
             onToggle={() => setShowDetails((prev) => ({ ...prev, relay: !prev.relay }))}
@@ -310,7 +344,7 @@ const TorNodeVisualization = () => {
         <Col span={8}>
           <NodeCard
             type="exit"
-            data={exitNodes}
+            data={nodeDetails.exit}
             showDetails={showDetails.exit}
             pagination={pagination.exit}
             onToggle={() => setShowDetails((prev) => ({ ...prev, exit: !prev.exit }))}
@@ -416,15 +450,14 @@ const NodeCard = ({
   onPaginationChange: (type: string, page: number, pageSize: number) => void;
   totalCount: number;
 }) => {
-  const statusColor: { [key in '在线' | '离线' | '异常']: string } = {
-    在线: 'green',
-    离线: 'red',
-    异常: 'yellow',
+  const statusColor: { [key: string]: string } = {
+    'up': 'green',
+    'down': 'red',
+    'unknown': 'yellow',
   };
 
   return (
     <div className={`card-container ${showDetails ? 'flipped' : ''}`}>
-      {/* 卡片正面 */}
       <div className="card-face card-front">
         <Card
           title={type === 'entry' ? '入口节点' : type === 'relay' ? '中继节点' : '出口节点'}
@@ -438,7 +471,7 @@ const NodeCard = ({
           <Statistic title="节点总数" value={totalCount} />
           <Statistic
             title="活跃占比"
-            value={(data.filter((n) => n.status === '在线').length / data.length) * 100}
+            value={(data.filter((n) => n.status === 'up').length / (data.length || 1)) * 100}
             suffix="%"
           />
           <Button
@@ -451,13 +484,12 @@ const NodeCard = ({
         </Card>
       </div>
 
-      {/* 卡片背面 */}
       <div className="card-face card-back">
         <Card
           title="详细信息"
           style={{
-            backgroundColor: '#000', // 背景颜色改为黑色
-            color: 'white', // 文字颜色改为白色
+            backgroundColor: '#000',
+            color: 'white',
             borderRadius: '10px',
             boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
           }}
@@ -467,17 +499,17 @@ const NodeCard = ({
             columns={[
               {
                 title: 'IP 地址',
-                dataIndex: 'ip',
-                key: 'ip',
+                dataIndex: 'IP',
+                key: 'IP',
               },
               {
                 title: '状态',
                 dataIndex: 'status',
                 key: 'status',
-                render: (status: '在线' | '离线' | '异常') => (
+                render: (status: string) => (
                   <Tooltip title={status}>
-                    <span style={{ color: statusColor[status] }}>
-                      {status === '在线' ? '✅' : status === '离线' ? '❌' : '⚠️'}
+                    <span style={{ color: statusColor[status] || 'yellow' }}>
+                      {status === 'up' ? '✅' : status === 'down' ? '❌' : '⚠️'}
                     </span>
                   </Tooltip>
                 ),
@@ -501,8 +533,8 @@ const NodeCard = ({
               showSizeChanger: false,
             }}
             size="small"
-            rowKey="ip"
-            style={{ color: 'white' }} // 表格文字颜色改为白色
+            rowKey="IP"
+            style={{ color: 'white' }}
           />
           <Button
             type="default"
@@ -510,8 +542,8 @@ const NodeCard = ({
             style={{
               width: '100%',
               marginTop: '15px',
-              backgroundColor: '#333', // 按钮背景颜色改为深灰色
-              color: 'white', // 按钮文字颜色改为白色
+              backgroundColor: '#333',
+              color: 'white',
             }}
           >
             返回
@@ -519,7 +551,6 @@ const NodeCard = ({
         </Card>
       </div>
     </div>
-
   );
 };
 

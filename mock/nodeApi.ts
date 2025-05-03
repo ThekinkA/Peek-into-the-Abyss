@@ -239,4 +239,32 @@ export default {
       });
     }
   },
+
+  'GET /api/node/category-details': async (req: Request, res: Response) => {
+    try {
+      const { category } = req.query;
+      
+      const [rows] = await pool.query(`
+        SELECT 
+          t.IP,
+          t.status_state as status,
+          i.country,
+          t.width_rec as bandwidth
+        FROM torprofile t
+        LEFT JOIN ip_with_country_city i ON t.IP = i.ip
+        WHERE t.category = ?
+        ORDER BY t.release_date DESC, t.release_time DESC
+      `, [category]);
+
+      res.send({
+        success: true,
+        data: rows
+      });
+    } catch (error) {
+      res.status(500).send({
+        success: false,
+        errorMessage: error.message
+      });
+    }
+  },
 };
