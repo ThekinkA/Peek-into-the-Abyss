@@ -216,4 +216,27 @@ export default {
       });
     }
   },
+
+  'GET /api/node/category-stats': async (req: Request, res: Response) => {
+    try {
+      const [rows] = await pool.query(`
+        SELECT 
+          category,
+          COUNT(*) as count
+        FROM torprofile
+        WHERE category IN ('Middle', 'Guard', 'Exit')
+        GROUP BY category
+      `);
+
+      res.send({
+        success: true,
+        data: rows
+      });
+    } catch (error) {
+      res.status(500).send({
+        success: false,
+        errorMessage: error.message
+      });
+    }
+  },
 };

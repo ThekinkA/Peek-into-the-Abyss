@@ -3,6 +3,7 @@ import { Card, Col, Row, Statistic, Button, Tooltip, Table } from 'antd';
 import { GlobalOutlined } from '@ant-design/icons';
 import * as echarts from 'echarts';
 import './TorOverview.css'; // 自定义样式文件
+import { getNodeCategoryStats } from '@/services/database';
 
 // 模拟带国家信息的节点数据
 const entryNodes = [
@@ -49,6 +50,36 @@ const TorNodeVisualization = () => {
     relay: { current: 1, pageSize: 3 },
     exit: { current: 1, pageSize: 3 },
   });
+  const [nodeStats, setNodeStats] = useState({
+    entry: 0,
+    relay: 0,
+    exit: 0
+  });
+
+  // 获取节点分类统计
+  useEffect(() => {
+    const fetchNodeStats = async () => {
+      try {
+        const response = await getNodeCategoryStats();
+        if (response.success && response.data) {
+          const stats = {
+            entry: 0,
+            relay: 0,
+            exit: 0
+          };
+          response.data.forEach(item => {
+            if (item.category === 'Guard') stats.entry = item.count;
+            if (item.category === 'Middle') stats.relay = item.count;
+            if (item.category === 'Exit') stats.exit = item.count;
+          });
+          setNodeStats(stats);
+        }
+      } catch (error) {
+        console.error('获取节点统计失败:', error);
+      }
+    };
+    fetchNodeStats();
+  }, []);
 
   // 初始化地图数据
   useEffect(() => {
@@ -256,12 +287,13 @@ const TorNodeVisualization = () => {
       <Row gutter={16} style={{ marginBottom: '20px' }}>
         <Col span={8}>
           <NodeCard
-            type="entry" // 确保值为 'entry' | 'relay' | 'exit'
+            type="entry"
             data={entryNodes}
             showDetails={showDetails.entry}
             pagination={pagination.entry}
             onToggle={() => setShowDetails((prev) => ({ ...prev, entry: !prev.entry }))}
             onPaginationChange={handlePaginationChange}
+            totalCount={nodeStats.entry}
           />
         </Col>
         <Col span={8}>
@@ -269,9 +301,10 @@ const TorNodeVisualization = () => {
             type="relay"
             data={relayNodes}
             showDetails={showDetails.relay}
-            pagination={pagination.relay}  // 使用 relay 节点的分页状态
+            pagination={pagination.relay}
             onToggle={() => setShowDetails((prev) => ({ ...prev, relay: !prev.relay }))}
-            onPaginationChange={handlePaginationChange} // 传递分页状态更新方法
+            onPaginationChange={handlePaginationChange}
+            totalCount={nodeStats.relay}
           />
         </Col>
         <Col span={8}>
@@ -279,9 +312,10 @@ const TorNodeVisualization = () => {
             type="exit"
             data={exitNodes}
             showDetails={showDetails.exit}
-            pagination={pagination.exit}  // 使用 exit 节点的分页状态
+            pagination={pagination.exit}
             onToggle={() => setShowDetails((prev) => ({ ...prev, exit: !prev.exit }))}
-            onPaginationChange={handlePaginationChange} // 传递分页状态更新方法
+            onPaginationChange={handlePaginationChange}
+            totalCount={nodeStats.exit}
           />
         </Col>
       </Row>
@@ -372,6 +406,7 @@ const NodeCard = ({
   onToggle,
   pagination,
   onPaginationChange,
+  totalCount,
 }: {
   type: 'entry' | 'relay' | 'exit';
   data: any[];
@@ -379,6 +414,7 @@ const NodeCard = ({
   onToggle: () => void;
   pagination: { current: number; pageSize: number };
   onPaginationChange: (type: string, page: number, pageSize: number) => void;
+  totalCount: number;
 }) => {
   const statusColor: { [key in '在线' | '离线' | '异常']: string } = {
     在线: 'green',
@@ -399,7 +435,7 @@ const NodeCard = ({
             boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
           }}
         >
-          <Statistic title="节点总数" value={data.length} />
+          <Statistic title="节点总数" value={totalCount} />
           <Statistic
             title="活跃占比"
             value={(data.filter((n) => n.status === '在线').length / data.length) * 100}

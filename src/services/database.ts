@@ -29,3 +29,7 @@ export async function getCClassAliveData(originalIp: string) {
 export async function getDefaultCClassAliveData() {
   return request<API.ApiResponse<API.CClassAliveData>>('/api/node/default-c-class-alive');
 }
+
+export async function getNodeCategoryStats() {
+  return request<API.ApiResponse<{category: string, count: number}[]>>('/api/node/category-stats');
+}
