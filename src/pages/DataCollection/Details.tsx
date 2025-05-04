@@ -26,8 +26,8 @@ const ipInfoCards = [
   { title: '类型', value: 'PTR', icon: <LinkOutlined style={{ color: '#eb2f96' }} /> },
   { title: '昵称', value: 'seele', icon: <UserOutlined style={{ color: '#13c2c2' }} /> },
   { title: '身份哈希密钥', value: 'AAoQ1DAR6kkoo19hBAX5K0QztNw', icon: <KeyOutlined style={{ color: '#faad14' }} /> },
-  { title: '发布日期', value: '2038-01-01', icon: <ClockCircleOutlined style={{ color: '#52c41a' }} /> },
-  { title: '发布时间', value: '00:00:00', icon: <ClockCircleOutlined style={{ color: '#fa541c' }} /> },
+  { title: '失效日期', value: '2038-01-01', icon: <ClockCircleOutlined style={{ color: '#52c41a' }} /> },
+  { title: '失效时间', value: '00:00:00', icon: <ClockCircleOutlined style={{ color: '#fa541c' }} /> },
   { title: 'QR端口', value: '9001', icon: <ShareAltOutlined style={{ color: '#722ed1' }} /> },
   { title: 'Dir端口', value: '0', icon: <ShareAltOutlined style={{ color: '#1890ff' }} /> },
   {
