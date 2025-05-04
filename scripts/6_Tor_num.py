@@ -5,21 +5,17 @@ import re
 from urllib.parse import urljoin
 import mysql.connector
 from mysql.connector import Error
-def get_url_content(url):
 
+def get_url_content(url):
     try:
         response = requests.get(url)
         response.raise_for_status()
-        #print(response.text)
         return response.text
     except Exception as e:
         print(f"Request error: {e}")
         return None
 
 def parse_html_content(content):
-    """
-    解析HTML内容，返回表格的前六个链接的href属性列表
-    """
     soup = BeautifulSoup(content, 'html.parser')
     table = soup.find('table')
     links = []
@@ -36,15 +32,18 @@ def parse_html_content(content):
     return links
 
 def save_to_file(content, filename):
-    """
-    将内容保存到文件
-    """
     with open(filename, 'w', encoding='utf-8') as file:
         file.write(content)
 
+def extract_valid_after_time(file_path):
+    with open(file_path, "r", encoding="utf-8") as file:
+        for line in file:
+            if line.startswith("valid-after"):
+                return line.split("valid-after")[1].strip()
+    return None
+
 def count_ips_in_files(folder):
-    total_ips = 0
-    results = {}  # 用于存储每个文件的统计结果
+    results = []  # 用于存储每个文件的统计结果
 
     for filename in os.listdir(folder):
         if filename.startswith("content_") and filename.endswith(".txt"):
@@ -52,17 +51,15 @@ def count_ips_in_files(folder):
             print(f"统计文件 {filename}")
             ips = count_ips_in_file(file_path)
             print(f"有效 IP 数量：{ips}")
-            results[filename] = ips  # 将所有结果存储在字典中
-            total_ips += ips
+            valid_after_time = extract_valid_after_time(file_path)
+            print(f"valid-after 时间：{valid_after_time}")
+            results.append({"valid_after_time": valid_after_time, "ip_num": ips})
 
-    print(f"所有文件的有效 IP 总数：{total_ips}")
-    return results  # 返回包含所有文件统计结果的字典
+    return results
 
 def count_ips_in_file(filename):
     count = 0
-    # 匹配时间格式：YYYY-MM-DD HH:MM:SS
     time_pattern = re.compile(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}')
-    # 匹配整行格式，确保包含时间信息
     ip_pattern = re.compile(r'^r \S+ \S+ ' + time_pattern.pattern + r' \d+\.\d+\.\d+\.\d+ \d+ \d+$')
     with open(filename, "r", encoding="utf-8") as file:
         for line in file:
@@ -70,7 +67,7 @@ def count_ips_in_file(filename):
                 count += 1
     return count
 
-def save_to_database(ip_num1, ip_num2, ip_num3, ip_num4, ip_num5, ip_num6):
+def save_to_database(results):
     try:
         connection = mysql.connector.connect(
             host='96.30.195.99',  # 数据库主机地址
@@ -85,13 +82,8 @@ def save_to_database(ip_num1, ip_num2, ip_num3, ip_num4, ip_num5, ip_num6):
             # 创建表格（如果不存在）
             create_table_query = """
             CREATE TABLE IF NOT EXISTS ip_counts (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                ip_num1 INT,
-                ip_num2 INT,
-                ip_num3 INT,
-                ip_num4 INT,
-                ip_num5 INT,
-                ip_num6 INT
+                valid_after_time DATETIME,
+                ip_num INT
             )
             """
             cursor.execute(create_table_query)
@@ -103,10 +95,11 @@ def save_to_database(ip_num1, ip_num2, ip_num3, ip_num4, ip_num5, ip_num6):
 
             # 插入新数据
             insert_query = """
-            INSERT INTO ip_counts (ip_num1, ip_num2, ip_num3, ip_num4, ip_num5, ip_num6)
-            VALUES (%s, %s, %s, %s, %s, %s)
+            INSERT INTO ip_counts (valid_after_time, ip_num)
+            VALUES (%s, %s)
             """
-            cursor.execute(insert_query, (ip_num1, ip_num2, ip_num3, ip_num4, ip_num5, ip_num6))
+            for result in results:
+                cursor.execute(insert_query, (result["valid_after_time"], result["ip_num"]))
             connection.commit()  # 提交事务
             print("数据插入成功")
 
@@ -137,12 +130,13 @@ def print_database_table():
             result = cursor.fetchall()
 
             # 打印表中的列名
-            print("{:<10} {:<10} {:<10} {:<10} {:<10} {:<10} {:<10}".format("id", "ip_num1", "ip_num2", "ip_num3", "ip_num4", "ip_num5", "ip_num6"))
-            print("-" * 70)
+            print("{:<20} {:<10}".format("valid_after_time", "ip_num"))
+            print("-" * 35)
 
             # 打印查询结果
             for row in result:
-                print("{:<10} {:<10} {:<10} {:<10} {:<10} {:<10} {:<10}".format(row[0], row[1], row[2], row[3], row[4], row[5], row[6]))
+                valid_after_time = row[0].strftime("%Y-%m-%d %H:%M:%S") if row[0] else "None"
+                print("{:<20} {:<10}".format(valid_after_time, row[1]))
 
     except Error as e:
         print("连接数据库时出错：", e)
@@ -177,19 +171,10 @@ def main():
 
     # 统计有效ip数
     results = count_ips_in_files(folder)  # 获取统计结果
-    # print(results)  # 打印包含每个文件统计结果的字典
-    values = list(results.values())
-    ip_num1, ip_num2, ip_num3, ip_num4, ip_num5, ip_num6 = values[:6]
-    print(f"ip_num1: {ip_num1}")
-    print(f"ip_num2: {ip_num2}")
-    print(f"ip_num3: {ip_num3}")
-    print(f"ip_num4: {ip_num4}")
-    print(f"ip_num5: {ip_num5}")
-    print(f"ip_num6: {ip_num6}")
-    os.makedirs(data_folder, exist_ok=True)
+    print(results)  # 打印包含每个文件统计结果的字典
 
     # 将数据存入数据库
-    save_to_database(ip_num1, ip_num2, ip_num3, ip_num4, ip_num5, ip_num6)
+    save_to_database(results)
     # 打印数据库表内容
     print_database_table()
 
