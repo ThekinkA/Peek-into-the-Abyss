@@ -323,4 +323,29 @@ export default {
       });
     }
   },
+
+  'GET /api/node/status-time-series': async (req: Request, res: Response) => {
+    try {
+      const [rows] = await pool.query(`
+        SELECT 
+          DATE_FORMAT(time, '%Y-%m-%d') as time,
+          SUM(CASE WHEN status_state = 'up' THEN 1 ELSE 0 END) as up,
+          SUM(CASE WHEN status_state = 'down' THEN 1 ELSE 0 END) as down,
+          SUM(CASE WHEN status_state NOT IN ('up', 'down') THEN 1 ELSE 0 END) as unknown
+        FROM torprofile
+        GROUP BY DATE_FORMAT(time, '%Y-%m-%d')
+        ORDER BY time ASC
+      `);
+
+      res.send({
+        success: true,
+        data: rows
+      });
+    } catch (error) {
+      res.status(500).send({
+        success: false,
+        errorMessage: error.message
+      });
+    }
+  },
 };

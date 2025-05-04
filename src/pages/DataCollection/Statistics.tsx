@@ -8,7 +8,7 @@ import { Card, Col, Row, Table, message } from 'antd';
 import * as echarts from 'echarts';
 import React, { useEffect, useState } from 'react';
 import EChartComponent from '../../components/EChartComponent'; // 引入封装的组件
-import { getTorProfile, getLatestTime, getCClassAliveData, getDefaultCClassAliveData, getNodeStatusStats, getTopFiveCountries } from '@/services/database';
+import { getTorProfile, getLatestTime, getCClassAliveData, getDefaultCClassAliveData, getNodeStatusStats, getTopFiveCountries, getNodeStatusTimeSeries } from '@/services/database';
 import './Statistics.css';
 
 interface CClassAliveData {
@@ -35,6 +35,13 @@ const Statistics: React.FC = () => {
   const [nodeStatusLoading, setNodeStatusLoading] = useState(false);
   const [topFiveCountries, setTopFiveCountries] = useState<{country: string, count: number}[]>([]);
   const [topFiveCountriesLoading, setTopFiveCountriesLoading] = useState(false);
+  const [nodeStatusTimeSeries, setNodeStatusTimeSeries] = useState<{
+    time: string;
+    up: number;
+    down: number;
+    unknown: number;
+  }[]>([]);
+  const [nodeStatusTimeSeriesLoading, setNodeStatusTimeSeriesLoading] = useState(false);
 
   useEffect(() => {
     // 初始化 ECharts 实例
@@ -164,11 +171,25 @@ const Statistics: React.FC = () => {
       setTopFiveCountriesLoading(false);
     };
 
+    const fetchNodeStatusTimeSeries = async () => {
+      setNodeStatusTimeSeriesLoading(true);
+      try {
+        const response = await getNodeStatusTimeSeries();
+        if (response.success) {
+          setNodeStatusTimeSeries(response.data);
+        }
+      } catch (error) {
+        console.error('获取节点状态时间序列数据失败:', error);
+      }
+      setNodeStatusTimeSeriesLoading(false);
+    };
+
     fetchTorProfile();
     fetchLatestTime();
     fetchDefaultCClassAliveData();
     fetchNodeStatusStats();
     fetchTopFiveCountries();
+    fetchNodeStatusTimeSeries();
   }, []);
 
   const handleTableRowClick = async (record: any) => {
@@ -411,7 +432,7 @@ const Statistics: React.FC = () => {
       <Row gutter={16} style={{ marginTop: '20px' }}>
         {/* 折线图 */}
         <Col span={18}>
-          <Card title="节点存活情况统计图" style={{ height: '100%' }}>
+          <Card title="节点存活情况统计图" style={{ height: '100%' }} loading={nodeStatusTimeSeriesLoading}>
             <EChartComponent
               option={{
                 tooltip: {
@@ -419,44 +440,87 @@ const Statistics: React.FC = () => {
                   axisPointer: {
                     type: 'cross',
                   },
+                  formatter: function(params: any) {
+                    let result = params[0].axisValue + '<br/>';
+                    params.forEach((param: any) => {
+                      result += param.marker + ' ' + param.seriesName + ': ' + param.value + ' 个节点<br/>';
+                    });
+                    return result;
+                  }
                 },
                 legend: {
-                  data: ['存活', '未存活'],
+                  data: ['存活节点', '未存活节点', '状态未知'],
+                  top: 10
+                },
+                grid: {
+                  left: '3%',
+                  right: '4%',
+                  bottom: '3%',
+                  containLabel: true
                 },
                 xAxis: {
                   type: 'category',
                   boundaryGap: false,
-                  data: ['10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00'],
+                  data: nodeStatusTimeSeries.map(item => item.time),
+                  axisLabel: {
+                    rotate: 45,
+                    interval: 'auto',
+                    hideOverlap: true
+                  }
                 },
                 yAxis: {
                   type: 'value',
+                  name: '节点数量',
+                  interval: 1,
+                  minInterval: 1
                 },
                 series: [
                   {
-                    name: '存活',
+                    name: '存活节点',
                     type: 'line',
                     smooth: true,
-                    data: [2000, 3000, 2500, 4000, 3500, 3000, 4000],
+                    data: nodeStatusTimeSeries.map(item => item.up),
                     areaStyle: {
-                      color: 'rgba(0, 112, 255, 0.2)', // 半透明填充
+                      color: 'rgba(82, 196, 26, 0.2)'
                     },
                     lineStyle: {
-                      color: 'rgba(0, 112, 255, 1)', // 线条颜色
+                      color: '#52c41a'
                     },
+                    itemStyle: {
+                      color: '#52c41a'
+                    }
                   },
                   {
-                    name: '未存活',
+                    name: '未存活节点',
                     type: 'line',
                     smooth: true,
-                    data: [3000, 2000, 3000, 2500, 2000, 3500, 3000],
+                    data: nodeStatusTimeSeries.map(item => item.down),
                     areaStyle: {
-                      color: 'rgba(0, 200, 83, 0.2)', // 半透明填充
+                      color: 'rgba(245, 34, 45, 0.2)'
                     },
                     lineStyle: {
-                      color: 'rgba(0, 200, 83, 1)', // 线条颜色
+                      color: '#f5222d'
                     },
+                    itemStyle: {
+                      color: '#f5222d'
+                    }
                   },
-                ],
+                  {
+                    name: '状态未知',
+                    type: 'line',
+                    smooth: true,
+                    data: nodeStatusTimeSeries.map(item => item.unknown),
+                    areaStyle: {
+                      color: 'rgba(250, 173, 20, 0.2)'
+                    },
+                    lineStyle: {
+                      color: '#faad14'
+                    },
+                    itemStyle: {
+                      color: '#faad14'
+                    }
+                  }
+                ]
               }}
               height="400px"
             />
