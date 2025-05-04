@@ -267,4 +267,85 @@ export default {
       });
     }
   },
+
+  'GET /api/node/status-stats': async (req: Request, res: Response) => {
+    try {
+      const [rows] = await pool.query(`
+        SELECT 
+          CASE 
+            WHEN status_state = 'up' THEN '存活节点'
+            WHEN status_state = 'down' THEN '未存活节点'
+            ELSE '状态未知'
+          END as status,
+          COUNT(*) as count
+        FROM torprofile
+        GROUP BY 
+          CASE 
+            WHEN status_state = 'up' THEN '存活节点'
+            WHEN status_state = 'down' THEN '未存活节点'
+            ELSE '状态未知'
+          END
+      `);
+
+      res.send({
+        success: true,
+        data: rows
+      });
+    } catch (error) {
+      res.status(500).send({
+        success: false,
+        errorMessage: error.message
+      });
+    }
+  },
+
+  'GET /api/node/top-five-countries': async (req: Request, res: Response) => {
+    try {
+      const [rows] = await pool.query(`
+        SELECT 
+          country,
+          COUNT(*) as count
+        FROM ip_with_country_city
+        WHERE country IS NOT NULL AND country != ''
+        GROUP BY country
+        ORDER BY count DESC
+        LIMIT 5
+      `);
+
+      res.send({
+        success: true,
+        data: rows
+      });
+    } catch (error) {
+      res.status(500).send({
+        success: false,
+        errorMessage: error.message
+      });
+    }
+  },
+
+  'GET /api/node/status-time-series': async (req: Request, res: Response) => {
+    try {
+      const [rows] = await pool.query(`
+        SELECT 
+          DATE_FORMAT(time, '%Y-%m-%d') as time,
+          SUM(CASE WHEN status_state = 'up' THEN 1 ELSE 0 END) as up,
+          SUM(CASE WHEN status_state = 'down' THEN 1 ELSE 0 END) as down,
+          SUM(CASE WHEN status_state NOT IN ('up', 'down') THEN 1 ELSE 0 END) as unknown
+        FROM torprofile
+        GROUP BY DATE_FORMAT(time, '%Y-%m-%d')
+        ORDER BY time ASC
+      `);
+
+      res.send({
+        success: true,
+        data: rows
+      });
+    } catch (error) {
+      res.status(500).send({
+        success: false,
+        errorMessage: error.message
+      });
+    }
+  },
 };

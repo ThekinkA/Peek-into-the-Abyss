@@ -44,3 +44,20 @@ export async function getNodeCategoryDetails(category: string) {
     params: { category },
   });
 }
+
+export async function getNodeStatusStats() {
+  return request<API.ApiResponse<{status: string, count: number}[]>>('/api/node/status-stats');
+}
+
+export async function getTopFiveCountries() {
+  return request<API.ApiResponse<{country: string, count: number}[]>>('/api/node/top-five-countries');
+}
+
+export async function getNodeStatusTimeSeries() {
+  return request<API.ApiResponse<{
+    time: string;
+    up: number;
+    down: number;
+    unknown: number;
+  }[]>>('/api/node/status-time-series');
+}
