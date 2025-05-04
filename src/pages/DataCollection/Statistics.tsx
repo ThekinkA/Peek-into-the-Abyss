@@ -8,7 +8,7 @@ import { Card, Col, Row, Table, message } from 'antd';
 import * as echarts from 'echarts';
 import React, { useEffect, useState } from 'react';
 import EChartComponent from '../../components/EChartComponent'; // 引入封装的组件
-import { getTorProfile, getLatestTime, getCClassAliveData, getDefaultCClassAliveData, getNodeStatusStats } from '@/services/database';
+import { getTorProfile, getLatestTime, getCClassAliveData, getDefaultCClassAliveData, getNodeStatusStats, getTopFiveCountries } from '@/services/database';
 import './Statistics.css';
 
 interface CClassAliveData {
@@ -33,6 +33,8 @@ const Statistics: React.FC = () => {
   const [selectedIp, setSelectedIp] = useState<string>('');
   const [nodeStatusStats, setNodeStatusStats] = useState<{status: string, count: number}[]>([]);
   const [nodeStatusLoading, setNodeStatusLoading] = useState(false);
+  const [topFiveCountries, setTopFiveCountries] = useState<{country: string, count: number}[]>([]);
+  const [topFiveCountriesLoading, setTopFiveCountriesLoading] = useState(false);
 
   useEffect(() => {
     // 初始化 ECharts 实例
@@ -149,10 +151,24 @@ const Statistics: React.FC = () => {
       setNodeStatusLoading(false);
     };
 
+    const fetchTopFiveCountries = async () => {
+      setTopFiveCountriesLoading(true);
+      try {
+        const response = await getTopFiveCountries();
+        if (response.success) {
+          setTopFiveCountries(response.data);
+        }
+      } catch (error) {
+        console.error('获取前五个国家数据失败:', error);
+      }
+      setTopFiveCountriesLoading(false);
+    };
+
     fetchTorProfile();
     fetchLatestTime();
     fetchDefaultCClassAliveData();
     fetchNodeStatusStats();
+    fetchTopFiveCountries();
   }, []);
 
   const handleTableRowClick = async (record: any) => {
@@ -500,7 +516,7 @@ const Statistics: React.FC = () => {
       <Row gutter={16} style={{ marginTop: '20px' }}>
         {/* 柱状图 */}
         <Col span={8}>
-          <Card title="节点全球地域分布情况" style={{ height: '100%' }}>
+          <Card title="节点全球地域分布情况" style={{ height: '100%' }} loading={topFiveCountriesLoading}>
             <EChartComponent
               option={{
                 tooltip: {
@@ -508,24 +524,44 @@ const Statistics: React.FC = () => {
                   axisPointer: {
                     type: 'shadow',
                   },
+                  formatter: '{b}: {c} 个节点'
+                },
+                grid: {
+                  left: '3%',
+                  right: '4%',
+                  bottom: '3%',
+                  containLabel: true
                 },
                 xAxis: {
                   type: 'category',
-                  data: ['类别1', '类别2', '类别3', '类别4', '类别5'],
+                  data: topFiveCountries.map(item => item.country),
+                  axisLabel: {
+                    interval: 0,
+                    rotate: 30
+                  }
                 },
                 yAxis: {
                   type: 'value',
+                  name: '节点数量'
                 },
                 series: [
                   {
-                    name: '数据量',
+                    name: '节点数量',
                     type: 'bar',
-                    data: [120, 200, 150, 80, 70],
+                    data: topFiveCountries.map(item => item.count),
                     itemStyle: {
-                      color: '#1890ff',
+                      color: function(params: any) {
+                        const colorList = ['#1890ff', '#52c41a', '#faad14', '#f5222d', '#722ed1'];
+                        return colorList[params.dataIndex];
+                      }
                     },
-                  },
-                ],
+                    label: {
+                      show: true,
+                      position: 'top',
+                      formatter: '{c}'
+                    }
+                  }
+                ]
               }}
               height="400px"
             />

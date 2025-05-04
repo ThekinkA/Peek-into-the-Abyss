@@ -298,4 +298,29 @@ export default {
       });
     }
   },
+
+  'GET /api/node/top-five-countries': async (req: Request, res: Response) => {
+    try {
+      const [rows] = await pool.query(`
+        SELECT 
+          country,
+          COUNT(*) as count
+        FROM ip_with_country_city
+        WHERE country IS NOT NULL AND country != ''
+        GROUP BY country
+        ORDER BY count DESC
+        LIMIT 5
+      `);
+
+      res.send({
+        success: true,
+        data: rows
+      });
+    } catch (error) {
+      res.status(500).send({
+        success: false,
+        errorMessage: error.message
+      });
+    }
+  },
 };

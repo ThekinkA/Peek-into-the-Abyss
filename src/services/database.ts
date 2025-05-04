@@ -48,3 +48,7 @@ export async function getNodeCategoryDetails(category: string) {
 export async function getNodeStatusStats() {
   return request<API.ApiResponse<{status: string, count: number}[]>>('/api/node/status-stats');
 }
+
+export async function getTopFiveCountries() {
+  return request<API.ApiResponse<{country: string, count: number}[]>>('/api/node/top-five-countries');
+}
