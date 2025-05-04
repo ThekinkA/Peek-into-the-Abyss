@@ -8,7 +8,7 @@ import { Card, Col, Row, Table, message } from 'antd';
 import * as echarts from 'echarts';
 import React, { useEffect, useState } from 'react';
 import EChartComponent from '../../components/EChartComponent'; // 引入封装的组件
-import { getTorProfile, getLatestTime, getCClassAliveData, getDefaultCClassAliveData } from '@/services/database';
+import { getTorProfile, getLatestTime, getCClassAliveData, getDefaultCClassAliveData, getNodeStatusStats } from '@/services/database';
 import './Statistics.css';
 
 interface CClassAliveData {
@@ -31,6 +31,8 @@ const Statistics: React.FC = () => {
   const [cClassAliveData, setCClassAliveData] = useState<CClassAliveData | null>(null);
   const [cClassAliveLoading, setCClassAliveLoading] = useState(false);
   const [selectedIp, setSelectedIp] = useState<string>('');
+  const [nodeStatusStats, setNodeStatusStats] = useState<{status: string, count: number}[]>([]);
+  const [nodeStatusLoading, setNodeStatusLoading] = useState(false);
 
   useEffect(() => {
     // 初始化 ECharts 实例
@@ -134,9 +136,23 @@ const Statistics: React.FC = () => {
       setCClassAliveLoading(false);
     };
 
+    const fetchNodeStatusStats = async () => {
+      setNodeStatusLoading(true);
+      try {
+        const response = await getNodeStatusStats();
+        if (response.success) {
+          setNodeStatusStats(response.data);
+        }
+      } catch (error) {
+        console.error('获取节点状态统计失败:', error);
+      }
+      setNodeStatusLoading(false);
+    };
+
     fetchTorProfile();
     fetchLatestTime();
     fetchDefaultCClassAliveData();
+    fetchNodeStatusStats();
   }, []);
 
   const handleTableRowClick = async (record: any) => {
@@ -433,7 +449,7 @@ const Statistics: React.FC = () => {
 
         {/* 饼状图 */}
         <Col span={6}>
-          <Card title="存活/未存活 节点占比" style={{ height: '100%' }}>
+          <Card title="存活/未存活 节点占比" style={{ height: '100%' }} loading={nodeStatusLoading}>
             <EChartComponent
               option={{
                 tooltip: {
@@ -443,18 +459,18 @@ const Statistics: React.FC = () => {
                 legend: {
                   orient: 'vertical',
                   left: 'right',
-                  data: ['家用电器', '食用酒水', '个护健康', '服饰箱包', '母婴产品', '其他'],
+                  data: nodeStatusStats.map(item => item.status),
                 },
                 series: [
                   {
-                    name: '销售额',
+                    name: '节点总数',
                     type: 'pie',
-                    radius: ['40%', '70%'], // 设置内外半径，形成环形图
+                    radius: ['40%', '70%'],
                     avoidLabelOverlap: false,
                     label: {
                       show: true,
                       position: 'center',
-                      formatter: '销售额\n¥ 123,224', // 中心文本
+                      formatter: `节点总数\n${nodeStatusStats.reduce((sum, item) => sum + item.count, 0)}`,
                       fontSize: 18,
                       fontWeight: 'bold',
                     },
@@ -468,14 +484,10 @@ const Statistics: React.FC = () => {
                     labelLine: {
                       show: false,
                     },
-                    data: [
-                      { value: 4544, name: '家用电器' },
-                      { value: 3321, name: '食用酒水' },
-                      { value: 3113, name: '个护健康' },
-                      { value: 2341, name: '服饰箱包' },
-                      { value: 1231, name: '母婴产品' },
-                      { value: 1231, name: '其他' },
-                    ],
+                    data: nodeStatusStats.map(item => ({
+                      value: item.count,
+                      name: item.status
+                    })),
                   },
                 ],
               }}

@@ -267,4 +267,35 @@ export default {
       });
     }
   },
+
+  'GET /api/node/status-stats': async (req: Request, res: Response) => {
+    try {
+      const [rows] = await pool.query(`
+        SELECT 
+          CASE 
+            WHEN status_state = 'up' THEN '存活节点'
+            WHEN status_state = 'down' THEN '未存活节点'
+            ELSE '状态未知'
+          END as status,
+          COUNT(*) as count
+        FROM torprofile
+        GROUP BY 
+          CASE 
+            WHEN status_state = 'up' THEN '存活节点'
+            WHEN status_state = 'down' THEN '未存活节点'
+            ELSE '状态未知'
+          END
+      `);
+
+      res.send({
+        success: true,
+        data: rows
+      });
+    } catch (error) {
+      res.status(500).send({
+        success: false,
+        errorMessage: error.message
+      });
+    }
+  },
 };

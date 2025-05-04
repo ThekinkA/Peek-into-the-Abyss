@@ -44,3 +44,7 @@ export async function getNodeCategoryDetails(category: string) {
     params: { category },
   });
 }
+
+export async function getNodeStatusStats() {
+  return request<API.ApiResponse<{status: string, count: number}[]>>('/api/node/status-stats');
+}
