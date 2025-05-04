@@ -83,7 +83,7 @@ const VulnerabilityInfo: React.FC = () => {
         const dkvCounts = [5];
         const option = {
             colors: ['#ff7373', '#52c41a'],
-            tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }},
+            tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
             legend: {
                 data: ['CVE数量', 'DKV数量'],
                 textStyle: { color: '#FFFFFF' },
@@ -222,6 +222,57 @@ const VulnerabilityInfo: React.FC = () => {
         }, 4000);
     }, [clearAll]);
 
+    const handleRunVul = async () => {
+        setLoading(true);
+        try {
+            const response = await fetch('http://localhost:5000/run-vul', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ targetIp }), // 将目标 IP 作为请求体发送
+            });
+            if (response.ok) {
+                const result = await response.json();
+                message.success(result.message || '脆弱性评估已触发');
+                handleShow(); // 更新 show 状态，显示组件
+            } else {
+                const error = await response.json();
+                message.error(error.error || '触发脆弱性评估失败');
+            }
+        } catch (error) {
+            message.error('请求失败');
+            console.error('请求失败:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleRunAttack = async () => {
+        setLoading(true);
+        try {
+            const response = await fetch('http://localhost:5000/run-attack', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ targetIp }), // 将目标 IP 作为请求体发送
+            });
+            if (response.ok) {
+                const result = await response.json();
+                message.success(result.message || '攻击路径推理已完成');
+            } else {
+                const error = await response.json();
+                message.error(error.error || '攻击路径推理失败');
+            }
+        } catch (error) {
+            message.error('请求失败');
+            console.error('请求失败:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div className="vulnerability-container">
             {/* 第一行：目标IP + 搜索功能 */}
@@ -280,22 +331,36 @@ const VulnerabilityInfo: React.FC = () => {
             <Row>
                 <Col>
                     <Space>
+                        {/* 开始脆弱性评估按钮 */}
                         <Button
                             type="primary"
-                            onClick={handleShow}
+                            onClick={handleRunVul}
                             loading={loading}
                             style={{ width: '150px' }}
                         >
                             {loading ? '正在加载...' : '开始脆弱性评估'}
                         </Button>
+
+                        {/* 新增展示评估结果按钮 */}
+                        <Button
+                            type="default"
+                            onClick={handleShow} // 点击时直接显示组件
+                            style={{ width: '150px' }}
+                        >
+                            展示评估结果
+                        </Button>
                     </Space>
                 </Col>
+            </Row>
+
+            {/* 显示评估结果的组件 */}
+            <Row>
                 <Col span={10}>
                     <CSSTransition in={show} timeout={300} classNames="fade" unmountOnExit>
                         <div className="vulnerability-content">
                             <div className="data-group">
                                 <h3>CVE 编号</h3>
-                                <div className="data-list" style={{gridTemplateColumns: '1fr 1fr'}}>
+                                <div className="data-list" style={{ gridTemplateColumns: '1fr 1fr' }}>
                                     <div className="scroll-container">
                                         {cveData1.map((item, index) => (
                                             <Card
@@ -330,25 +395,28 @@ const VulnerabilityInfo: React.FC = () => {
                         </div>
                     </CSSTransition>
                 </Col>
-                <Col span={10}>
+                <Col span={14}>
                     <div id="bar-chart" style={{ height: '400px', width: '100%' }}></div>
                 </Col>
             </Row>
 
             {canJump && (
-              <div style={{ marginTop: '40px', textAlign: 'center' }}>
-                <Button
-                  type="primary"
-                  icon={<RightOutlined />}
-                  onClick={() => navigate('/control-system/result-analysis', { state: { ip: targetIp } })}
-                >
-                  可进行攻击路径推理
-                </Button>
-              </div>
+                <div style={{ marginTop: '40px', textAlign: 'center' }}>
+                    <Button
+                        type="primary"
+                        icon={<RightOutlined />}
+                        onClick={() => {
+                            navigate('/control-system/result-analysis', { state: { ip: targetIp } });
+                            handleRunAttack(); // 跳转后运行 handleRunAttack 函数
+                        }}
+                    >
+                        可进行攻击路径推理
+                    </Button>
+                </div>
             )}
 
 
-          {/* 漏洞详细信息弹窗 */}
+            {/* 漏洞详细信息弹窗 */}
             {detailData && (
                 <Modal
                     title="漏洞详细信息"
