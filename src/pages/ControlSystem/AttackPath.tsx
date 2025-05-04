@@ -4,6 +4,9 @@ import { CSSTransition } from 'react-transition-group';
 import * as echarts from 'echarts';
 import * as neo4j from 'neo4j-driver';
 import './AttackPath.less';
+import { useNavigate } from 'react-router-dom';
+import { RightOutlined } from '@ant-design/icons';
+
 
 const { Search } = Input;
 
@@ -27,11 +30,16 @@ const VulnerabilityInfo: React.FC = () => {
     const [category, setCategory] = useState([]); // echarts 图例数据数
     const [knowlegGraphshow, setKnowlegGraphshow] = useState(false); // 控制知识图谱显示
 
+    const [canJump, setCanJump] = useState(false);
+
+    const navigate = useNavigate();
+
     // 模拟的数据
     const cveData1 = ['CVE-2004-0001', 'CVE-2009-2321', 'CVE-2016-1001', 'CVE-2020-565', 'CVE-2022-1234', 'CVE-2023-6789', 'CVE-2024-1234'];
     const dkvData1 = ['DKV-2222', 'DKV-9322', 'DKV-1325', 'DKV-6789', 'DKV-4567', 'DKV-8888', 'DKV-9999'];
     const cveData = ['CVE'];
     const dkvData = ['DKV'];
+
 
     // 初始化 Neo4j 驱动
     useEffect(() => {
@@ -51,6 +59,7 @@ const VulnerabilityInfo: React.FC = () => {
         setTimeout(() => {
             setShow(true);
             setLoading(false);
+            setCanJump(true);
         }, 300);
         setChartShow(true);
         setTimeout(() => {
@@ -271,8 +280,8 @@ const VulnerabilityInfo: React.FC = () => {
             <Row>
                 <Col>
                     <Space>
-                        <Button 
-                            type="primary" 
+                        <Button
+                            type="primary"
                             onClick={handleShow}
                             loading={loading}
                             style={{ width: '150px' }}
@@ -326,7 +335,20 @@ const VulnerabilityInfo: React.FC = () => {
                 </Col>
             </Row>
 
-            {/* 漏洞详细信息弹窗 */}
+            {canJump && (
+              <div style={{ marginTop: '40px', textAlign: 'center' }}>
+                <Button
+                  type="primary"
+                  icon={<RightOutlined />}
+                  onClick={() => navigate('/control-system/result-analysis', { state: { ip: targetIp } })}
+                >
+                  可进行攻击路径推理
+                </Button>
+              </div>
+            )}
+
+
+          {/* 漏洞详细信息弹窗 */}
             {detailData && (
                 <Modal
                     title="漏洞详细信息"
