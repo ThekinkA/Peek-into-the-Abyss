@@ -1,15 +1,18 @@
 import { getNodeDistribution, getLatestIPs, getIpCounts } from '@/services/database';
-import { Card, Col, Popover, Row } from 'antd';
+import { Card, Col, Popover, Row, Button } from 'antd'; // 添加 Button 组件的引入
 import ReactECharts from 'echarts-for-react';
 import React, { useEffect, useRef, useState } from 'react';
 import Globe from 'react-globe.gl';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import { useRequest } from 'umi';
 import './style.less';
+import axios from 'axios'; // 确保安装 axios: npm install axios
+import { io } from 'socket.io-client';
 
 const SituationAwareness: React.FC = () => {
   const globeRef = useRef<any>();
   const [openPopoverIndex, setOpenPopoverIndex] = useState<number | null>(null);
+  const [latestLog, setLatestLog] = useState<string>(''); // 保存最新日志
 
   interface NodeData {
     lat: number;
@@ -36,7 +39,7 @@ const SituationAwareness: React.FC = () => {
   }, [data]);
 
   const { data: ipCountsData } = useRequest(getIpCounts);
-  const [columnData, setColumnData] = useState<{month: string, count: number}[]>([]);
+  const [columnData, setColumnData] = useState<{ month: string, count: number }[]>([]);
 
   // 修改日期处理部分
   useEffect(() => {
@@ -148,8 +151,59 @@ const SituationAwareness: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    const socket = io('http://localhost:5000'); // 连接到后端 WebSocket
+    socket.on('log', (data: { message: string }) => {
+      setLatestLog(data.message); // 更新最新日志
+    });
+
+    return () => {
+      socket.disconnect(); // 组件卸载时断开连接
+    };
+  }, []);
+
+  const handleManualUpdate = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/run-script', { method: 'POST' });
+      if (response.ok) {
+        console.log('脚本运行已触发');
+      } else {
+        console.error('触发脚本运行失败');
+      }
+    } catch (error) {
+      console.error('请求失败:', error);
+    }
+  };
+
   return (
     <>
+      {/* 添加顶部说明和按钮 */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '10px 20px',
+          background: '#1c1c1c',
+          color: '#fff',
+          borderBottom: '1px solid #333',
+          width: '100%',
+          maxWidth: '1740px', // 设置最大宽度
+          marginLeft: '20px',
+          paddingLeft: '20px',
+        }}
+      >
+        <div style={{ fontSize: '16px', fontWeight: 'bold' }}>
+          本项目自动追踪最新Tor官网信息，预计每两小时自动更新数据
+        </div>
+        <div style={{ fontSize: '14px', color: '#FFD700', textAlign: 'center' }}>
+          {latestLog || '暂无日志信息'}
+        </div>
+        <Button type="primary" onClick={handleManualUpdate}>
+          手动更新
+        </Button>
+      </div>
+
       {openPopoverIndex !== null && (
         <div
           onClick={() => setOpenPopoverIndex(null)}
