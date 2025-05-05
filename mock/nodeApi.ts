@@ -456,4 +456,35 @@ export default {
       });
     }
   },
+
+  'GET /api/node/port-info': async (req: Request, res: Response) => {
+    try {
+      const { ip } = req.query;
+      const [rows] = await pool.query(`
+        SELECT 
+          port_num as port,
+          port_state as state,
+          reason,
+          name,
+          product,
+          version,
+          extrainfo as extra,
+          conf,
+          cpe
+        FROM totport
+        WHERE IP = ?
+        ORDER BY port_num
+      `, [ip]);
+
+      res.send({
+        success: true,
+        data: rows,
+      });
+    } catch (error) {
+      res.status(500).send({
+        success: false,
+        errorMessage: error.message,
+      });
+    }
+  },
 };

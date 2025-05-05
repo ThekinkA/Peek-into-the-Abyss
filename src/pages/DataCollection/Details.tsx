@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Card, Col, Row, Table, message } from 'antd';
 import { useLocation } from 'umi';
-import { getTorProfile } from '@/services/database';
+import { getTorProfile, getPortInfo } from '@/services/database';
 import {
   InfoCircleOutlined,
   UserOutlined,
@@ -60,33 +60,6 @@ const ipInfoCards = [
   },
 ];
 
-const portData = [
-  {
-    key: '1',
-    port: 80,
-    state: 'open',
-    reason: 'syn-ack',
-    name: 'http',
-    product: 'Apache',
-    version: '2.4.29',
-    extra: '',
-    conf: '3',
-    cpe: 'cpe:/a:apache:http_server:2.4.29',
-  },
-  {
-    key: '2',
-    port: 22,
-    state: 'open',
-    reason: 'syn-ack',
-    name: 'ssh',
-    product: 'OpenSSH',
-    version: '7.6p1',
-    extra: '',
-    conf: '3',
-    cpe: 'cpe:/a:openbsd:openssh:7.6p1',
-  },
-];
-
 const columns = [
   { title: '端口号', dataIndex: 'port', key: 'port' },
   { title: '端口状态', dataIndex: 'state', key: 'state' },
@@ -106,6 +79,7 @@ const Details: React.FC = () => {
   
   const [nodeDetails, setNodeDetails] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [portData, setPortData] = useState<any[]>([]);
   const textRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const [overflowed, setOverflowed] = useState<boolean[]>([]);
@@ -142,6 +116,23 @@ const Details: React.FC = () => {
 
     fetchNodeDetails();
   }, [urlIp]);
+
+  useEffect(() => {
+    const fetchPortInfo = async () => {
+      if (!selectedIp) return;
+      
+      try {
+        const response = await getPortInfo(selectedIp);
+        if (response.success && response.data) {
+          setPortData(response.data);
+        }
+      } catch (error) {
+        message.error('获取端口信息失败');
+      }
+    };
+
+    fetchPortInfo();
+  }, [selectedIp]);
 
   useEffect(() => {
     const newOverflowed = ipInfoCards.map((_, i) => {

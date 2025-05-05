@@ -89,3 +89,19 @@ export async function getCountryDistribution() {
 export async function getIPList() {
   return request<API.ApiResponse<{label: string, value: string}[]>>('/api/node/ip-list');
 }
+
+export async function getPortInfo(ip: string) {
+  return request<API.ApiResponse<{
+    port: number;
+    state: string;
+    reason: string;
+    name: string;
+    product: string;
+    version: string;
+    extra: string;
+    conf: string;
+    cpe: string;
+  }[]>>('/api/node/port-info', {
+    params: { ip },
+  });
+}
