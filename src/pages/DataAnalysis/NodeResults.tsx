@@ -2,27 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { Card, Col, Row, Select, Statistic, Descriptions } from 'antd';
 import * as echarts from 'echarts';
 import './NodeResults.css'; // 你可以创建这个样式文件，参考已有的样式
+import { getIPList } from '@/services/database';
 
 const { Option } = Select;
 
-// 模拟任务数据
-const tasks = [
-  { label: '任务一', value: 'task1' },
-  { label: '任务二', value: 'task2' },
-  { label: '任务三', value: 'task3' },
-];
-
 // 模拟节点数据
 const nodesData = {
-  task1: [
+  '1.1.1.1': [
     { ip: '1.1.1.1', domain: 'example1.com', location: 'US', probeTime: '2025-04-20', title: '节点 A' },
     { ip: '1.1.1.2', domain: 'example2.com', location: 'DE', probeTime: '2025-04-20', title: '节点 B' },
   ],
-  task2: [
+  '2.2.2.1': [
     { ip: '2.2.2.1', domain: 'example3.com', location: 'IN', probeTime: '2025-04-19', title: '节点 C' },
     { ip: '2.2.2.2', domain: 'example4.com', location: 'RU', probeTime: '2025-04-19', title: '节点 D' },
   ],
-  task3: [
+  '3.3.3.1': [
     { ip: '3.3.3.1', domain: 'example5.com', location: 'CN', probeTime: '2025-04-18', title: '节点 E' },
     { ip: '3.3.3.2', domain: 'example6.com', location: 'BR', probeTime: '2025-04-18', title: '节点 F' },
   ],
@@ -30,29 +24,50 @@ const nodesData = {
 
 // 模拟neo4j图谱数据
 const graphData = {
-  task1: [
+  '1.1.1.1': [
     { name: '节点 A', connections: ['节点 B'] },
     { name: '节点 B', connections: ['节点 A'] },
   ],
-  task2: [
+  '2.2.2.1': [
     { name: '节点 C', connections: ['节点 D'] },
     { name: '节点 D', connections: ['节点 C'] },
   ],
-  task3: [
+  '3.3.3.1': [
     { name: '节点 E', connections: ['节点 F'] },
     { name: '节点 F', connections: ['节点 E'] },
   ],
 };
 
 const NodeResults = () => {
-  const [selectedTask, setSelectedTask] = useState(tasks[0].value); // 默认选择第一个任务
-  const [nodes, setNodes] = useState(nodesData[selectedTask]);
-  const [graph, setGraph] = useState(graphData[selectedTask]);
+  const [ipList, setIpList] = useState<{label: string, value: string}[]>([]);
+  const [selectedIP, setSelectedIP] = useState<string>('');
+  const [nodes, setNodes] = useState(nodesData[selectedIP] || []);
+  const [graph, setGraph] = useState(graphData[selectedIP] || []);
 
-  const handleTaskChange = (value: string) => {
-    setSelectedTask(value);
-    setNodes(nodesData[value]);
-    setGraph(graphData[value]);
+  // 获取IP列表
+  useEffect(() => {
+    const fetchIPList = async () => {
+      try {
+        const response = await getIPList();
+        if (response.success && response.data) {
+          setIpList(response.data);
+          if (response.data.length > 0) {
+            setSelectedIP(response.data[0].value);
+            setNodes(nodesData[response.data[0].value] || []);
+            setGraph(graphData[response.data[0].value] || []);
+          }
+        }
+      } catch (error) {
+        console.error('获取IP列表失败:', error);
+      }
+    };
+    fetchIPList();
+  }, []);
+
+  const handleIPChange = (value: string) => {
+    setSelectedIP(value);
+    setNodes(nodesData[value] || []);
+    setGraph(graphData[value] || []);
   };
 
   const initGraphChart = () => {
@@ -137,25 +152,30 @@ const NodeResults = () => {
 
   useEffect(() => {
     initGraphChart();
-  }, [selectedTask, graph]);
+  }, [selectedIP, graph]);
 
   return (
     <div>
       <Card title="节点分析结果">
         <Row gutter={16} style={{ marginBottom: '20px' }}>
           <Col span={12}>
-            <Select defaultValue={tasks[0].value} style={{ width: '100%' }} onChange={handleTaskChange}>
-              {tasks.map((task) => (
-                <Option key={task.value} value={task.value}>
-                  {task.label}
+            <Select 
+              value={selectedIP} 
+              style={{ width: '100%' }} 
+              onChange={handleIPChange}
+              placeholder="请选择IP地址"
+            >
+              {ipList.map((ip) => (
+                <Option key={ip.value} value={ip.value}>
+                  {ip.label}
                 </Option>
               ))}
             </Select>
           </Col>
           <Col span={12}>
             <Statistic
-              title="当前任务"
-              value={tasks.find((task) => task.value === selectedTask)?.label || '未知任务'}
+              title="当前IP"
+              value={selectedIP || '未选择'}
             />
           </Col>
         </Row>

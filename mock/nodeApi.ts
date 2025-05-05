@@ -348,4 +348,112 @@ export default {
       });
     }
   },
+
+  'GET /api/node/vulnerability-stats': async (req: Request, res: Response) => {
+    try {
+      const [rows] = await pool.query(`
+        SELECT 
+          vulnerability_CVE,
+          COUNT(*) as count
+        FROM vulnerabilities
+        GROUP BY vulnerability_CVE
+        ORDER BY count DESC
+        LIMIT 5
+      `);
+
+      res.send({
+        success: true,
+        data: rows,
+      });
+    } catch (error) {
+      res.status(500).send({
+        success: false,
+        errorMessage: error.message,
+      });
+    }
+  },
+
+  'GET /api/node/vulnerability-details': async (req: Request, res: Response) => {
+    try {
+      const { cve } = req.query;
+      const [rows] = await pool.query(`
+        SELECT 
+          vulnerability_CVE
+          /*数据库中暂时缺少相关数据
+          ,
+          description,
+          severity,
+          affected_versions,
+          fix_version
+          */
+        FROM vulnerabilities
+        WHERE vulnerability_CVE = ?
+        LIMIT 1
+      `, [cve]);
+
+      if (rows.length === 0) {
+        res.send({
+          success: true,
+          data: null,
+          message: '未找到相关漏洞信息'
+        });
+        return;
+      }
+
+      res.send({
+        success: true,
+        data: rows[0],
+      });
+    } catch (error) {
+      res.status(500).send({
+        success: false,
+        errorMessage: error.message,
+      });
+    }
+  },
+
+  'GET /api/node/country-distribution': async (req: Request, res: Response) => {
+    try {
+      const [rows] = await pool.query(`
+        SELECT 
+          country as name,
+          COUNT(*) as value
+        FROM ip_with_country_city
+        WHERE country IS NOT NULL AND country != ''
+        GROUP BY country
+        ORDER BY value DESC
+      `);
+
+      res.send({
+        success: true,
+        data: rows
+      });
+    } catch (error) {
+      res.status(500).send({
+        success: false,
+        errorMessage: error.message
+      });
+    }
+  },
+
+  'GET /api/node/ip-list': async (req: Request, res: Response) => {
+    try {
+      const [rows] = await pool.query(`
+        SELECT DISTINCT IP as value, IP as label
+        FROM torprofile
+        ORDER BY IP
+        LIMIT 10
+      `);
+
+      res.send({
+        success: true,
+        data: rows,
+      });
+    } catch (error) {
+      res.status(500).send({
+        success: false,
+        errorMessage: error.message,
+      });
+    }
+  },
 };

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Col, Row, Statistic, Button, Tooltip, Table } from 'antd';
+import { Card, Col, Row, Statistic, Button, Tooltip, Table, Modal } from 'antd';
 import { GlobalOutlined } from '@ant-design/icons';
 import * as echarts from 'echarts';
 import './TorOverview.css'; // 自定义样式文件
-import { getNodeCategoryStats, getNodeCategoryDetails } from '@/services/database';
+import { getNodeCategoryStats, getNodeCategoryDetails, getVulnerabilityStats, getVulnerabilityDetails } from '@/services/database';
 
 // 模拟带国家信息的节点数据
 const entryNodes = [
@@ -67,6 +67,15 @@ const TorNodeVisualization = () => {
     relay: [],
     exit: []
   });
+  const [vulnerabilityStats, setVulnerabilityStats] = useState<{vulnerability_CVE: string, count: number}[]>([]);
+  const [selectedVulnerability, setSelectedVulnerability] = useState<{
+    vulnerability_CVE: string;
+    description: string;
+    severity: string;
+    affected_versions: string;
+    fix_version: string;
+  } | null>(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
   // 获取节点分类统计
   useEffect(() => {
@@ -207,6 +216,21 @@ const TorNodeVisualization = () => {
   };
 
   useEffect(() => {
+    // 获取漏洞统计数据
+    const fetchVulnerabilityStats = async () => {
+      try {
+        const response = await getVulnerabilityStats();
+        if (response.success && response.data) {
+          setVulnerabilityStats(response.data);
+        }
+      } catch (error) {
+        console.error('获取漏洞统计失败:', error);
+      }
+    };
+    fetchVulnerabilityStats();
+  }, []);
+
+  useEffect(() => {
     // === Family 图谱 ===
     const familyGraph = echarts.init(document.getElementById('familyGraph')!);
     const familyOption = {
@@ -273,20 +297,24 @@ const TorNodeVisualization = () => {
     // === 横向柱状图 ===
     const vulnChart = echarts.init(document.getElementById('vulnChart')!);
     const vulnOption = {
-      tooltip: { trigger: 'item' },
+      tooltip: { 
+        trigger: 'item',
+        formatter: '{b}: {c}次'
+      },
       xAxis: {
         type: 'value',
         boundaryGap: [0, 0.01],
+        name: '出现次数',
       },
       yAxis: {
         type: 'category',
-        data: ['配置错误', '旧版本', '开放目录', '加密问题', '未知风险'],
+        data: vulnerabilityStats.map(item => item.vulnerability_CVE),
       },
       series: [
         {
           name: '漏洞数量',
           type: 'bar',
-          data: [80, 60, 40, 20, 10],
+          data: vulnerabilityStats.map(item => item.count),
           itemStyle: {
             color: '#FF6F61',
           },
@@ -295,8 +323,22 @@ const TorNodeVisualization = () => {
     };
     vulnChart.setOption(vulnOption);
     vulnChart.resize();
+
+    // 添加点击事件
+    vulnChart.on('click', async (params) => {
+      try {
+        const response = await getVulnerabilityDetails(params.name);
+        if (response.success && response.data) {
+          setSelectedVulnerability(response.data);
+          setIsModalVisible(true);
+        }
+      } catch (error) {
+        console.error('获取漏洞详情失败:', error);
+      }
+    });
+
     window.addEventListener('resize', () => vulnChart.resize());
-  }, []);
+  }, [vulnerabilityStats]);
 
 
   // 切换节点类型
@@ -411,10 +453,10 @@ const TorNodeVisualization = () => {
       {/* 漏洞说明 + 数据图表 */}
       <Row gutter={16} style={{ marginBottom: '20px' }}>
         <Col span={8}>
-          <Card title="漏洞说明" style={{height: '300px' }}>
+          <Card title="漏洞说明" style={{height: '300px'}}>
             <p>
-              以下图表展示了 Tor 网络中节点常见的安全漏洞分布情况，包含配置错误、
-              老旧软件、开放目录、加密问题等。及时修复这些漏洞可以提升整个网络的安全性。
+              以下图表展示了 Tor 网络中最常见的五个漏洞分布情况。点击柱状图可以查看详细的漏洞信息，
+              包括漏洞描述、严重程度、受影响版本和修复版本等信息。
             </p>
           </Card>
         </Col>
@@ -429,6 +471,27 @@ const TorNodeVisualization = () => {
         </Col>
       </Row>
 
+      {/* 漏洞详情弹窗 */}
+      <Modal
+        title={`漏洞详情 - ${selectedVulnerability?.vulnerability_CVE}`}
+        open={isModalVisible}
+        onCancel={() => setIsModalVisible(false)}
+        footer={[
+          <Button key="close" onClick={() => setIsModalVisible(false)}>
+            关闭
+          </Button>
+        ]}
+      >
+        {selectedVulnerability && (
+          <div>
+            <p><strong>漏洞编号：</strong>{selectedVulnerability.vulnerability_CVE}</p>
+            <p><strong>严重程度：</strong>{selectedVulnerability.severity}</p>
+            <p><strong>漏洞描述：</strong>{selectedVulnerability.description}</p>
+            <p><strong>受影响版本：</strong>{selectedVulnerability.affected_versions}</p>
+            <p><strong>修复版本：</strong>{selectedVulnerability.fix_version}</p>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };

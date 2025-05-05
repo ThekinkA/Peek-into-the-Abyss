@@ -8,7 +8,7 @@ import { Card, Col, Row, Table, message } from 'antd';
 import * as echarts from 'echarts';
 import React, { useEffect, useState } from 'react';
 import EChartComponent from '../../components/EChartComponent'; // 引入封装的组件
-import { getTorProfile, getLatestTime, getCClassAliveData, getDefaultCClassAliveData, getNodeStatusStats, getTopFiveCountries, getNodeStatusTimeSeries } from '@/services/database';
+import { getTorProfile, getLatestTime, getCClassAliveData, getDefaultCClassAliveData, getNodeStatusStats, getTopFiveCountries, getNodeStatusTimeSeries, getCountryDistribution } from '@/services/database';
 import './Statistics.css';
 
 interface CClassAliveData {
@@ -42,6 +42,8 @@ const Statistics: React.FC = () => {
     unknown: number;
   }[]>([]);
   const [nodeStatusTimeSeriesLoading, setNodeStatusTimeSeriesLoading] = useState(false);
+  const [countryData, setCountryData] = useState<{ name: string; value: number }[]>([]);
+  const [mapLoading, setMapLoading] = useState(false);
 
   useEffect(() => {
     // 初始化 ECharts 实例
@@ -49,57 +51,80 @@ const Statistics: React.FC = () => {
 
     // 加载世界地图数据
     myChart.showLoading();
-    fetch('/geo/world.json') // 指向 public/geo/world.json
-      .then((response) => response.json())
-      .then((worldJson) => {
-        myChart.hideLoading();
+    
+    const fetchData = async () => {
+      try {
+        const [worldJson, countryData] = await Promise.all([
+          fetch('/geo/world.json').then(res => res.json()),
+          getCountryDistribution().then(res => res.data)
+        ]);
 
-        // 注册世界地图
+        myChart.hideLoading();
         echarts.registerMap('world', worldJson);
 
-        // 数据示例
-        const data = [
-          { name: 'China', value: 1409517397 },
-          { name: 'India', value: 1339180127 },
-          { name: 'United States', value: 324459463 },
-          { name: 'Indonesia', value: 263991379 },
-          { name: 'Brazil', value: 209288278 },
-          { name: 'Pakistan', value: 197015955 },
-          { name: 'Nigeria', value: 190886311 },
-          { name: 'Bangladesh', value: 164669751 },
-          { name: 'Russia', value: 143989754 },
-          { name: 'Mexico', value: 129163276 },
-        ];
+        // 计算最大值用于 visualMap 配置
+        const maxValue = Math.max(...countryData.map(item => item.value));
 
         // 地图配置
         const mapOption = {
+          title: {
+            text: '全球节点分布热力图',
+            left: 'center',
+            top: '5%',
+            textStyle: {
+              color: '#333'
+            }
+          },
+          tooltip: {
+            trigger: 'item',
+            formatter: (params: any) => {
+              return `${params.name}<br/>节点数量：${params.value || 0}`;
+            }
+          },
           visualMap: {
             left: 'right',
             min: 0,
-            max: 1500000000,
+            max: maxValue,
             inRange: {
-              color: ['#e0f3f8', '#abd9e9', '#74add1', '#4575b4', '#313695'],
+              color: ['#e0f3f8', '#abd9e9', '#74add1', '#4575b4', '#313695']
             },
-            text: ['High', 'Low'],
+            text: ['高', '低'],
             calculable: true,
+            dimension: 0
           },
           series: [
             {
+              name: '节点数量',
               type: 'map',
               map: 'world',
               roam: true,
-              data: data,
-            },
-          ],
+              emphasis: {
+                label: {
+                  show: true
+                }
+              },
+              data: countryData
+            }
+          ]
         };
 
-        // 设置地图配置
         myChart.setOption(mapOption);
-      })
-      .catch((error) => {
-        console.error('加载世界地图数据失败:', error);
-      });
+        setCountryData(countryData);
+      } catch (error) {
+        console.error('加载数据失败:', error);
+        myChart.hideLoading();
+      }
+    };
 
+    fetchData();
+
+    // 清理函数
+    return () => {
+      myChart.dispose();
+    };
+  }, []);
+
+  useEffect(() => {
     const fetchTorProfile = async () => {
       setLoading(true);
       try {

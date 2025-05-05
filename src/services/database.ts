@@ -61,3 +61,31 @@ export async function getNodeStatusTimeSeries() {
     unknown: number;
   }[]>>('/api/node/status-time-series');
 }
+
+export async function getVulnerabilityStats() {
+  return request<API.ApiResponse<{vulnerability_CVE: string, count: number}[]>>('/api/node/vulnerability-stats');
+}
+
+export async function getVulnerabilityDetails(cve: string) {
+  return request<API.ApiResponse<{
+    vulnerability_CVE: string;
+    /*数据库中暂时缺少相关数据*/
+    description: string;
+    severity: string;
+    affected_versions: string;
+    fix_version: string;
+  }>>('/api/node/vulnerability-details', {
+    params: { cve },
+  });
+}
+
+export async function getCountryDistribution() {
+  return request<API.ApiResponse<{
+    name: string;
+    value: number;
+  }[]>>('/api/node/country-distribution');
+}
+
+export async function getIPList() {
+  return request<API.ApiResponse<{label: string, value: string}[]>>('/api/node/ip-list');
+}
