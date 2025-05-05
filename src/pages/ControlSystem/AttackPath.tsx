@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button, Space, Card, Tag, Modal, Row, Col, Input, message } from 'antd';
 import { CSSTransition } from 'react-transition-group';
 import * as echarts from 'echarts';
-import * as neo4j from 'neo4j-driver';
+import { NeoVis } from 'neovis.js';
 import './AttackPath.less';
 import { useNavigate } from 'react-router-dom';
 import { RightOutlined } from '@ant-design/icons';
-
+import { values } from 'lodash';
 
 const { Search } = Input;
 
@@ -23,15 +23,12 @@ const VulnerabilityInfo: React.FC = () => {
         '192.168.1.2',
         '192.168.1.1',
     ]);
-    const [driver, setDriver] = useState<neo4j.Driver | null>(null);
     const [clearAll, setClearAll] = useState(true);
     const [echartsNode, setEchartsNode] = useState([]); // 节点数组
     const [nodesRelation, setNodesRelation] = useState([]); // 关系线数组
     const [category, setCategory] = useState([]); // echarts 图例数据数
     const [knowlegGraphshow, setKnowlegGraphshow] = useState(false); // 控制知识图谱显示
-
     const [canJump, setCanJump] = useState(false);
-
     const navigate = useNavigate();
 
     // 模拟的数据
@@ -39,20 +36,78 @@ const VulnerabilityInfo: React.FC = () => {
     const dkvData1 = ['DKV-2222', 'DKV-9322', 'DKV-1325', 'DKV-6789', 'DKV-4567', 'DKV-8888', 'DKV-9999'];
     const cveData = ['CVE'];
     const dkvData = ['DKV'];
+    const [graphInitialized, setGraphInitialized] = useState(false);
+    const vizRef = useRef<HTMLDivElement>(null);
+    const vizInstance = useRef<NeoVis | null>(null);
 
-
-    // 初始化 Neo4j 驱动
-    useEffect(() => {
-        const neo4jDriver = neo4j.driver('bolt://localhost:7687', neo4j.auth.basic('neo4j', 'wck330328'));
-        setDriver(neo4jDriver);
-        return () => {
-            neo4jDriver.close();
+useEffect(() => {
+    if (vizRef.current && !graphInitialized) {
+        var config = {
+            containerId: vizRef.current.id, // 使用 ref 的 id
+            neo4j: {
+                serverUrl: "bolt://localhost:7687",
+                serverUser: "neo4j",
+                serverPassword: "wck330328"
+            },
+            labels: {
+                "攻击路径": {
+                    label: "name", // 显示节点的 `name` 属性
+                    group: "community", // 节点颜色分组
+                    size: 50, // 统一节点大小
+                    font: { size: 14, color: "#000000" }, // 节点字体配置
+                    title_properties: ["name"] // 在节点提示中显示 `name` 属性[^35^]
+                }
+            },
+            relationships: {
+                "攻击路径": {
+                    value: 'weight', // 假设关系有 `weight` 属性
+                    caption: true, // 显示关系的默认标签（类型）
+                    label: "顺序" // 显示关系的 `顺序` 属性（如果有）
+                }
+            },
+            visConfig: {
+                nodes: {
+                    shape: 'circle', // 设置节点形状为圆形
+                    size: 100, // 统一节点大小
+                    font: { size: 14, color: "#000000" } // 节点字体配置
+                },
+                edges: {
+                    arrows: {
+                        to: {
+                            enabled: true, // 显示箭头
+                            type: "arrow" // 箭头类型
+                        }
+                    },
+                    width: 1, // 关系线的粗细
+                    font: { size: 12, color: "#606266" } // 关系线字体配置
+                },
+                physics: {
+                    barnesHut: {
+                        gravitationalConstant: -200,  // 减小引力
+                        centralGravity: 0.01,          // 减小中心引力
+                        springLength: 150,             // 增加弹簧长度
+                        springConstant: 0.02           // 调整弹簧常数
+                    }
+                }
+            },
+            initialCypher: "MATCH (n)-[r]->(m) RETURN n,r,m" // 查询语句
         };
-    }, []);
+
+        vizInstance.current = new NeoVis(config);
+        vizInstance.current.render();
+            setTimeout(() => {
+                console.log('Graph initialized and rendered');
+                setGraphInitialized(true);
+            }, 1000);  // 等 1 秒
+
+    }
+}, [graphInitialized]);
+
 
     useEffect(() => {
-        renderNeo4jGraph();
-    }, [echartsNode, nodesRelation, category]);
+        console.log("vizRef:", vizRef.current);
+        console.log("DOM element:", document.getElementById("viz"));
+    }, []);
 
     const handleShow = () => {
         setLoading(true);
@@ -136,86 +191,6 @@ const VulnerabilityInfo: React.FC = () => {
         setTargetIp(ip);
     };
 
-    // 定义执行 Cypher 查询的函数
-    // 定义执行 Cypher 查询的函数
-    const executeCypher = async () => {
-        if (!driver) return;
-        const session = driver.session();
-        const query = `MATCH (startNode:攻击路径 {节点标识符: '${targetIp}_8'})-[r]->(endNode) RETURN startNode, r, endNode`;
-
-        try {
-            const result = await session.run(query);
-            const nodes: any[] = [];
-            const links: any[] = [];
-            const nodeMap = new Map();
-
-            result.records.forEach(record => {
-                const startNode = record.get('startNode');
-                const endNode = record.get('endNode');
-                const relation = record.get('r');
-
-                const addNode = (node: any) => {
-                    const id = node.identity.toInt();
-                    if (!nodeMap.has(id)) {
-                        const nodeData = {
-                            id: id,
-                            name: node.properties.name || node.properties.节点标识符 || `节点${id}`,
-                            category: node.labels[0] || '未知',
-                            symbolSize: 50,
-                        };
-                        nodeMap.set(id, nodeData);
-                        nodes.push(nodeData);
-                    }
-                };
-
-                addNode(startNode);
-                addNode(endNode);
-
-                links.push({
-                    source: nodeMap.get(startNode.identity.toInt()).id,
-                    target: nodeMap.get(endNode.identity.toInt()).id,
-                    name: relation.type,
-                });
-            });
-
-            setEchartsNode(nodes);
-            setNodesRelation(links);
-            setCategory([...new Set(nodes.map(n => n.category))]);
-            session.close();
-        } catch (error) {
-            console.error('Cypher 执行失败', error);
-            session.close();
-        }
-    };
-
-    const renderNeo4jGraph = () => {
-        const chartDom = document.getElementById('neo4j-graph') as HTMLElement;
-        const myChart = echarts.init(chartDom);
-        const option = {
-            tooltip: {},
-            legend: { data: category },
-            series: [{
-                type: 'graph',
-                layout: 'force',
-                data: echartsNode,
-                links: nodesRelation,
-                categories: category.map(name => ({ name })),
-                roam: true,
-                label: { show: true },
-                edgeLabel: {
-                    show: true,
-                    formatter: x => x.data.name,
-                },
-                force: {
-                    repulsion: 300,
-                    edgeLength: 150,
-                }
-            }]
-        };
-        myChart.setOption(option);
-        window.addEventListener('resize', () => myChart.resize());
-    };
-
     useEffect(() => {
         setTimeout(() => {
             setKnowlegGraphshow(true);
@@ -293,17 +268,19 @@ const VulnerabilityInfo: React.FC = () => {
                 </Col>
             </Row>
 
-            {/* 第二行：执行查询按钮 */}
-            <Row>
-                <Col span={24} style={{ textAlign: 'center', marginBottom: '20px' }}>
-                    <Button type="primary" onClick={executeCypher}>查询攻击路径节点</Button>
-                </Col>
-            </Row>
-
             {/* 第三行：Neo4j + 曲线 */}
             <Row gutter={24} style={{ marginBottom: '30px' }}>
                 <Col span={20}>
-                    <div id="neo4j-graph" style={{ height: '600px', background: '#0d1117', borderRadius: '12px', padding: '10px' }}></div>
+                    <div
+                        id="viz"
+                        ref={vizRef}
+                        style={{
+                            height: '600px',
+                            background: '#0d1117',
+                            borderRadius: '12px',
+                            padding: '10px',
+                        }}
+                    ></div>
                 </Col>
                 <Col span={4}>
                     <div className="curve-container" style={{ height: '600px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-around', background: 'linear-gradient(to top, #8B0000, #FF0000)', borderRadius: '12px', padding: '10px' }}>
@@ -414,7 +391,6 @@ const VulnerabilityInfo: React.FC = () => {
                     </Button>
                 </div>
             )}
-
 
             {/* 漏洞详细信息弹窗 */}
             {detailData && (
