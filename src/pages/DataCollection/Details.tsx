@@ -102,31 +102,37 @@ const columns = [
 const Details: React.FC = () => {
   const location = useLocation();
   const query = new URLSearchParams(location.search);
-  const ip = query.get('ip');
+  const urlIp = query.get('ip');
   
   const [nodeDetails, setNodeDetails] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const textRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const [overflowed, setOverflowed] = useState<boolean[]>([]);
+  const [selectedIp, setSelectedIp] = useState<string | null>(urlIp);
 
   useEffect(() => {
     const fetchNodeDetails = async () => {
-      if (!ip) {
-        message.error('未提供IP地址');
-        return;
-      }
-      
       setLoading(true);
       try {
         const response = await getTorProfile();
-        if (response.success && response.data) {
-          const details = response.data.find((node: any) => node.IP === ip);
+        if (response.success && response.data && response.data.length > 0) {
+          // 如果URL中提供了IP，则使用该IP；否则使用第一个IP
+          const ipToUse = urlIp || response.data[0].IP;
+          setSelectedIp(ipToUse);
+          
+          const details = response.data.find((node: any) => node.IP === ipToUse);
           if (details) {
             setNodeDetails(details);
+          } else if (response.data.length > 0) {
+            // 如果找不到指定IP的节点但有数据，则显示第一个节点
+            setNodeDetails(response.data[0]);
+            setSelectedIp(response.data[0].IP);
           } else {
             message.error('未找到节点详情');
           }
+        } else {
+          message.error('获取节点数据失败');
         }
       } catch (error) {
         message.error('获取节点详情失败');
@@ -135,7 +141,7 @@ const Details: React.FC = () => {
     };
 
     fetchNodeDetails();
-  }, [ip]);
+  }, [urlIp]);
 
   useEffect(() => {
     const newOverflowed = ipInfoCards.map((_, i) => {
@@ -149,17 +155,21 @@ const Details: React.FC = () => {
     setExpandedIndex((prev) => (prev === index ? null : index));
   };
 
-  if (!ip) {
-    return <div>未提供IP地址</div>;
+  if (loading) {
+    return (
+      <div style={{ width: '80%', marginLeft: '5%' }}>
+        <Card loading={true}>
+          <div style={{ textAlign: 'center', padding: '20px' }}>加载中...</div>
+        </Card>
+      </div>
+    );
   }
 
   if (!nodeDetails) {
     return (
       <div style={{ width: '80%', marginLeft: '5%' }}>
-        <Card loading={loading}>
-          <div style={{ textAlign: 'center', padding: '20px' }}>
-            {loading ? '加载中...' : '未找到节点详情'}
-          </div>
+        <Card>
+          <div style={{ textAlign: 'center', padding: '20px' }}>未找到节点详情</div>
         </Card>
       </div>
     );
@@ -237,7 +247,7 @@ const Details: React.FC = () => {
         })}
 
         <Col span={24}>
-          <Card title="端口信息" bordered={false}>
+          <Card title={`端口信息 (IP: ${selectedIp || '未知'})`} bordered={false}>
             <Table dataSource={portData} columns={columns} pagination={false} bordered />
           </Card>
         </Col>
