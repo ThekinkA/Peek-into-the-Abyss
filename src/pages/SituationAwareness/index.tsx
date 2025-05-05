@@ -6,7 +6,7 @@ import Globe from 'react-globe.gl';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import { useRequest } from 'umi';
 import './style.less';
-import axios from 'axios'; // 确保安装 axios: npm install axios
+// import axios from 'axios'; // 确保安装 axios: npm install axios
 import { io } from 'socket.io-client';
 
 const SituationAwareness: React.FC = () => {
@@ -41,6 +41,9 @@ const SituationAwareness: React.FC = () => {
   const { data: ipCountsData } = useRequest(getIpCounts);
   const [columnData, setColumnData] = useState<{ month: string, count: number }[]>([]);
 
+  const [scanProgress, setScanProgress] = useState(40); // 初始进度为40%
+  const [processedProgress, setProcessedProgress] = useState(29); // 初始进度为29%
+
   // 修改日期处理部分
   useEffect(() => {
     if (ipCountsData) {
@@ -67,31 +70,68 @@ const SituationAwareness: React.FC = () => {
 
   const { data: latestIPsData, loading: latestIPsLoading } = useRequest(getLatestIPs);
   const [ipList, setIpList] = useState<string[]>([]);
+  const [displayedIPs, setDisplayedIPs] = useState<string[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
 
   useEffect(() => {
-    if (latestIPsData) {
+    if (latestIPsData && latestIPsData.length > 0) {
       setIpList(latestIPsData);
+      setDisplayedIPs(latestIPsData.slice(0, 4)); // 初始化显示前4个
+      setCurrentIndex(4 % latestIPsData.length);
     }
   }, [latestIPsData]);
 
+  useEffect(() => {
+    // 设置一个定时器，缓慢增加进度
+    const scanInterval = setInterval(() => {
+      setScanProgress(prev => {
+        if (prev < 100) {
+          return Math.min(prev + 1, 100); // 每次增加0.1%，最大为100%
+        }
+        return prev;
+      });
+    }, 10000); // 每100ms更新一次
+
+    const processedInterval = setInterval(() => {
+      setProcessedProgress(prev => {
+        if (prev < 100) {
+          return Math.min(prev + 1, 100); // 每次增加0.1%，最大为100%
+        }
+        return prev;
+      });
+    }, 10000); // 每100ms更新一次
+
+    return () => {
+      clearInterval(scanInterval);
+      clearInterval(processedInterval); // 组件卸载时清理定时器
+    };
+  }, []);
+
+
   const newsData = [
     {
-      title: '科学界惊呼生物学被改写',
+      title: '个人隐私泄露危机：谁在暗网“直播”你的人生',
       date: '2077-13-31',
+      content: '个人信息面临“开盒“风险，”开盒“即利用非法手段公开曝光他人隐私数据与信息。近期，《中国经济周刊》记者潜入多个“开盒”telegram群组，探寻普通人与恶的距离究竟有多近。',
     },
     {
-      title: '新型加密技术崛起，挑战全球安全',
+      title: '加密货币平台OKX数据遭到泄露',
       date: '2035-04-99',
+      content: '2025.1.11某暗网数据交易平台有人宣称正在售卖一份加密货币平台OKX数据。卖家称此份数据共100万条，包含的数据字段有：姓名、手机号、运营商、金额、注册账号、网站编码等，此份数据的价格为150美元。',
     },
     {
-      title: '数据泄露案件频发，黑客攻击加剧',
+      title: '3191名美国国会工作人员的数据在暗网中泄露',
       date: '2025-04-15',
+      content: '互联网安全公司 Proton 和 Constella Intelligence 的最新研究显示，约有 3,191 名国会工作人员的个人信息在暗网上被泄露。泄露的数据包括密码、IP 地址和社交媒体信息。几乎五分之一的国会工作人员的个人信息在暗网上被泄露。近 300 名工作人员的数据在 10 多起不同的事件中遭到泄露。',
     },
     {
-      title: '数据泄露案件频发，黑客攻击加剧',
+      title: '暗网Nemesis Market创始人被起诉，涉嫌加密货币洗钱等犯罪',
       date: '2025-04-15',
+      content: '据美国司法部公告，伊朗国民 Behrouz Parsarad 因运营暗网市场 Nemesis Market 被美国联邦大陪审团起诉，涉嫌分销管制药品和洗钱。平台通过混币服务为非法交易提供加密货币洗钱服务，且仅支持加密货币支付。2024 年 3 月，美国执法部门联合德国和立陶宛当局查封了 Nemesis Market。2025 年 3 月，美国财政部海外资产控制办公室对 Parsarad 实施制裁。',
     },
   ];
+
 
   // 修改图表配置部分
   const columnChartOption = {
@@ -161,6 +201,22 @@ const SituationAwareness: React.FC = () => {
       socket.disconnect(); // 组件卸载时断开连接
     };
   }, []);
+
+  useEffect(() => {
+    if (ipList.length < 5) return;
+
+    const interval = setInterval(() => {
+      setDisplayedIPs(prev => {
+        const nextIP = ipList[currentIndex];
+        const newDisplay = [nextIP, ...prev.slice(0, 3)];
+        return newDisplay;
+      });
+      setCurrentIndex(prev => (prev + 1) % ipList.length);
+    }, 3000); // 每3秒插入一个新的
+
+    return () => clearInterval(interval);
+  }, [ipList, currentIndex]);
+
 
   const handleManualUpdate = async () => {
     try {
@@ -315,7 +371,7 @@ const SituationAwareness: React.FC = () => {
                       content={
                         <div style={{ maxWidth: '300px' }}>
                           <h4>{news.title}</h4>
-                          <p>这是该新闻的详细内容，可以从后端获取或手动补充摘要。</p>
+                          <p>{news.content}</p>
                         </div>
                       }
                       title="新闻详情"
@@ -345,6 +401,7 @@ const SituationAwareness: React.FC = () => {
                       </div>
                     </Popover>
                   ))}
+
                 </Card>
               </Col>
             </Row>
@@ -356,9 +413,9 @@ const SituationAwareness: React.FC = () => {
           <Col span={14}>
             <Card title="实时任务展示" bodyStyle={{ background: '#1c1c1c', color: '#fff' }}>
               {[
-                { label: '已获取 Tor 节点', percent: 30.5 },
-                { label: 'Tor 节点扫描进度', percent: 80 },
-                { label: '已处理 Tor 节点', percent: 29 },
+                { label: '已获取 Tor 节点', percent: 100 },
+                { label: 'Tor 节点扫描进度', percent: scanProgress }, // 使用状态值
+                { label: '已处理 Tor 节点', percent: processedProgress }, // 使用状态值
               ].map((item, index) => (
                 <div key={index} style={{ marginBottom: '16px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
@@ -390,6 +447,7 @@ const SituationAwareness: React.FC = () => {
                   </div>
                 </div>
               ))}
+
             </Card>
           </Col>
 
@@ -400,17 +458,14 @@ const SituationAwareness: React.FC = () => {
               loading={latestIPsLoading}
             >
               <TransitionGroup style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {ipList.map((ip) => (
+                {displayedIPs.map((ip) => (
                   <CSSTransition key={ip} timeout={500} classNames="fade-item">
-                    <div
-                      className="ip-item"
-                      style={{
-                        background: '#1c1c1c',
-                        color: '#FCDA8C',
-                        padding: '10px',
-                        borderRadius: '4px',
-                      }}
-                    >
+                    <div className="ip-item" style={{
+                      background: '#1c1c1c',
+                      color: '#FCDA8C',
+                      padding: '10px',
+                      borderRadius: '4px',
+                    }}>
                       新增 IP: {ip}
                     </div>
                   </CSSTransition>
