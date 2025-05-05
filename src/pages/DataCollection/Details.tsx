@@ -1,5 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Card, Col, Row, Table } from 'antd';
+import { Card, Col, Row, Table, message } from 'antd';
+import { useLocation } from 'umi';
+import { getTorProfile } from '@/services/database';
 import {
   InfoCircleOutlined,
   UserOutlined,
@@ -98,9 +100,42 @@ const columns = [
 ];
 
 const Details: React.FC = () => {
+  const location = useLocation();
+  const query = new URLSearchParams(location.search);
+  const ip = query.get('ip');
+  
+  const [nodeDetails, setNodeDetails] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
   const textRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const [overflowed, setOverflowed] = useState<boolean[]>([]);
+
+  useEffect(() => {
+    const fetchNodeDetails = async () => {
+      if (!ip) {
+        message.error('未提供IP地址');
+        return;
+      }
+      
+      setLoading(true);
+      try {
+        const response = await getTorProfile();
+        if (response.success && response.data) {
+          const details = response.data.find((node: any) => node.IP === ip);
+          if (details) {
+            setNodeDetails(details);
+          } else {
+            message.error('未找到节点详情');
+          }
+        }
+      } catch (error) {
+        message.error('获取节点详情失败');
+      }
+      setLoading(false);
+    };
+
+    fetchNodeDetails();
+  }, [ip]);
 
   useEffect(() => {
     const newOverflowed = ipInfoCards.map((_, i) => {
@@ -108,16 +143,57 @@ const Details: React.FC = () => {
       return el ? el.scrollWidth > el.clientWidth : false;
     });
     setOverflowed(newOverflowed);
-  }, []);
+  }, [nodeDetails]);
 
   const toggleExpand = (index: number) => {
     setExpandedIndex((prev) => (prev === index ? null : index));
   };
 
+  if (!ip) {
+    return <div>未提供IP地址</div>;
+  }
+
+  if (!nodeDetails) {
+    return (
+      <div style={{ width: '80%', marginLeft: '5%' }}>
+        <Card loading={loading}>
+          <div style={{ textAlign: 'center', padding: '20px' }}>
+            {loading ? '加载中...' : '未找到节点详情'}
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  // 将节点详情转换为卡片数据
+  const detailsCards = [
+    {
+      fullRow: true,
+      icon: <InfoCircleOutlined style={{ color: '#1890ff' }} />,
+      title: 'IP 地址 / 名称',
+      value: `${nodeDetails.IP} / ${nodeDetails.name || '未知'}`,
+    },
+    { title: '类型', value: nodeDetails.type || '未知', icon: <LinkOutlined style={{ color: '#eb2f96' }} /> },
+    { title: '昵称', value: nodeDetails.nikename || '未知', icon: <UserOutlined style={{ color: '#13c2c2' }} /> },
+    { title: '身份哈希密钥', value: nodeDetails.des_hash || '未知', icon: <KeyOutlined style={{ color: '#faad14' }} /> },
+    { title: '发布日期', value: nodeDetails.release_date || '未知', icon: <ClockCircleOutlined style={{ color: '#52c41a' }} /> },
+    { title: '发布时间', value: nodeDetails.release_time || '未知', icon: <ClockCircleOutlined style={{ color: '#fa541c' }} /> },
+    { title: 'OR端口', value: nodeDetails.ORPort || '未知', icon: <ShareAltOutlined style={{ color: '#722ed1' }} /> },
+    { title: 'Dir端口', value: nodeDetails.DirPort || '未知', icon: <ShareAltOutlined style={{ color: '#1890ff' }} /> },
+    { title: '微描述摘要散列', value: nodeDetails.microdesc || '未知', icon: <KeyOutlined style={{ color: '#f5222d' }} /> },
+    { title: '特征标签', value: nodeDetails.fea_label || '未知', icon: <TagsOutlined style={{ color: '#13c2c2' }} /> },
+    { title: 'Tor 版本', value: nodeDetails.Tor_ver || '未知', icon: <ThunderboltOutlined style={{ color: '#722ed1' }} /> },
+    { title: '协议版本', value: nodeDetails.protocol_ver || '未知', icon: <DeploymentUnitOutlined style={{ color: '#eb2f96' }} /> },
+    { title: '带宽估计', value: nodeDetails.width_rec || '未知', icon: <WifiOutlined style={{ color: '#52c41a' }} /> },
+    { title: '状态', value: nodeDetails.status_state || '未知', icon: <DatabaseOutlined style={{ color: '#faad14' }} /> },
+    { title: '状态原因', value: nodeDetails.status_reason || '未知', icon: <InfoCircleOutlined style={{ color: '#f5222d' }} /> },
+    { title: '操作系统', value: nodeDetails.OS || '未知', icon: <DesktopOutlined style={{ color: '#13c2c2' }} /> },
+  ];
+
   return (
     <div style={{ width: '80%', marginLeft: '5%' }}>
       <Row gutter={[30, 30]}>
-        {ipInfoCards.map((item, index) => {
+        {detailsCards.map((item, index) => {
           const isExpanded = expandedIndex === index;
           const canExpand = overflowed[index];
 

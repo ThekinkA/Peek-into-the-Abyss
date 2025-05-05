@@ -10,6 +10,7 @@ import React, { useEffect, useState } from 'react';
 import EChartComponent from '../../components/EChartComponent'; // 引入封装的组件
 import { getTorProfile, getLatestTime, getCClassAliveData, getDefaultCClassAliveData, getNodeStatusStats, getTopFiveCountries, getNodeStatusTimeSeries, getCountryDistribution } from '@/services/database';
 import './Statistics.css';
+import { history } from 'umi';
 
 interface CClassAliveData {
   id: number;
@@ -125,6 +126,7 @@ const Statistics: React.FC = () => {
   }, []);
 
   useEffect(() => {
+
     const fetchTorProfile = async () => {
       setLoading(true);
       try {
@@ -217,22 +219,8 @@ const Statistics: React.FC = () => {
     fetchNodeStatusTimeSeries();
   }, []);
 
-  const handleTableRowClick = async (record: any) => {
-    setCClassAliveLoading(true);
-    try {
-      const response = await getCClassAliveData(record.IP);
-      if (response.success) {
-        if (response.data) {
-          setCClassAliveData(response.data);
-          setSelectedIp(record.IP);
-        } else {
-          message.info('数据库中无相关数据');
-        }
-      }
-    } catch (error) {
-      message.error('链接数据库失败');
-    }
-    setCClassAliveLoading(false);
+  const handleTableRowClick = (record: any) => {
+    history.push(`/data-collection/details?ip=${record.IP}`);
   };
 
   // 表格数据
@@ -687,6 +675,10 @@ const Statistics: React.FC = () => {
               loading={loading}
               pagination={{ pageSize: 10 }}
               scroll={{ x: 1500 }}
+              onRow={(record) => ({
+                onClick: () => handleTableRowClick(record),
+                style: { cursor: 'pointer' }
+              })}
             />
           </Card>
         </Col>
