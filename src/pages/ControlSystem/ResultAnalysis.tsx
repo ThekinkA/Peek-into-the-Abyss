@@ -153,8 +153,18 @@ const ResultAnalysis: React.FC = () => {
             label: {
               show: true,
               formatter: rel.type,
+              fontSize: 14, // 设置字体大小
+              fontWeight: 'bold', // 设置字体粗细
+              color: '#fff', // 设置字体颜色
             },
           })),
+          label: {
+            show: true,
+            position: 'inside', // 节点标签位置
+            fontSize: 12, // 设置节点字体大小
+            fontWeight: 'bold', // 设置节点字体粗细
+            color: '#fff', // 设置节点字体颜色
+          },
           roam: true,
           force: {
             repulsion: 1000,
@@ -241,8 +251,12 @@ const ResultAnalysis: React.FC = () => {
       >
         <Row gutter={24} style={{ marginTop: '40px' }}>
           <Col span={24}>
-            <Card
-              title={cardTitle}
+          <Card
+              title={
+                <span style={{ fontSize: '20px', fontWeight: 'bold', color: 'white' }}>
+                  {cardTitle}
+                </span>
+              }
               style={{
                 height: '700px',
                 width: '100%',
