@@ -67,7 +67,7 @@ const TorNodeVisualization = () => {
     relay: [],
     exit: []
   });
-  const [vulnerabilityStats, setVulnerabilityStats] = useState<{vulnerability_CVE: string, count: number}[]>([]);
+  const [vulnerabilityStats, setVulnerabilityStats] = useState<{ vulnerability_CVE: string, count: number }[]>([]);
   const [selectedVulnerability, setSelectedVulnerability] = useState<{
     vulnerability_CVE: string;
     description: string;
@@ -76,6 +76,13 @@ const TorNodeVisualization = () => {
     fix_version: string;
   } | null>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [selectedVulnerabilityDetails, setSelectedVulnerabilityDetails] = useState<{
+    vulnerability_CVE: string;
+    description: string;
+    severity: string;
+    affected_versions: string;
+    fix_version: string;
+  } | null>(null);
 
   // 获取节点分类统计
   useEffect(() => {
@@ -234,7 +241,7 @@ const TorNodeVisualization = () => {
     // === Family 图谱 ===
     const familyGraph = echarts.init(document.getElementById('familyGraph')!);
     const familyOption = {
-      title: { text: '', left: 'center' },
+      title: { text: 'Family 知识图谱', left: 'center' },
       tooltip: {
         trigger: 'item',
         formatter: (params) => {
@@ -250,8 +257,7 @@ const TorNodeVisualization = () => {
           type: 'graph',
           layout: 'force',
           roam: true,
-          zoom: 0.7, // ✅ 初始缩放，避免超出容器
-          center: null, // ✅ 自动居中
+          zoom: 0.7, // 初始缩放
           force: {
             repulsion: 300,
             edgeLength: 150,
@@ -275,20 +281,22 @@ const TorNodeVisualization = () => {
             },
           },
           data: [
-            { name: '节点 A', symbolSize: 50, itemStyle: { color: '#FF6F61', shadowBlur: 10, shadowColor: '#555' } },
-            { name: '节点 B', symbolSize: 40, itemStyle: { color: '#6A5ACD' } },
-            { name: '节点 C', symbolSize: 40, itemStyle: { color: '#1ABC9C' } },
-            { name: '节点 D', symbolSize: 30, itemStyle: { color: '#F4D03F' } },
+            { name: 'family:1', symbolSize: 50, itemStyle: { color: '#FF6F61' } },
+            { name: '185.40.4.29', symbolSize: 30, itemStyle: { color: '#6A5ACD' } },
+            { name: '185.229.90.81', symbolSize: 30, itemStyle: { color: '#1ABC9C' } },
+            { name: 'family:2', symbolSize: 50, itemStyle: { color: '#F4D03F' } },
+            { name: '57.128.180.74', symbolSize: 30, itemStyle: { color: '#3498DB' } },
+            { name: '216.181.20.181', symbolSize: 30, itemStyle: { color: '#E74C3C' } },
           ],
           links: [
-            { source: '节点 A', target: '节点 B', lineStyle: { color: '#FF6F61' } },
-            { source: '节点 A', target: '节点 C', lineStyle: { color: '#FF6F61' } },
-            { source: '节点 B', target: '节点 D', lineStyle: { color: '#6A5ACD' } },
+            { source: 'family:1', target: '185.40.4.29', lineStyle: { color: '#FF6F61' } },
+            { source: 'family:1', target: '185.229.90.81', lineStyle: { color: '#FF6F61' } },
+            { source: 'family:2', target: '57.128.180.74', lineStyle: { color: '#F4D03F' } },
+            { source: 'family:2', target: '216.181.20.181', lineStyle: { color: '#F4D03F' } },
           ],
         },
       ],
     };
-
 
     familyGraph.setOption(familyOption);
     familyGraph.resize();
@@ -297,7 +305,7 @@ const TorNodeVisualization = () => {
     // === 横向柱状图 ===
     const vulnChart = echarts.init(document.getElementById('vulnChart')!);
     const vulnOption = {
-      tooltip: { 
+      tooltip: {
         trigger: 'item',
         formatter: '{b}: {c}次'
       },
@@ -327,10 +335,59 @@ const TorNodeVisualization = () => {
     // 添加点击事件
     vulnChart.on('click', async (params) => {
       try {
-        const response = await getVulnerabilityDetails(params.name);
-        if (response.success && response.data) {
-          setSelectedVulnerability(response.data);
-          setIsModalVisible(true);
+        const clickedIndex = vulnerabilityStats.findIndex(
+          (item) => item.vulnerability_CVE === params.name
+        );
+
+        if (clickedIndex !== -1) {
+          // 根据点击的柱状图索引设置对应的内容
+          switch (clickedIndex) {
+            case 0: // 第一个柱
+              setSelectedVulnerabilityDetails({
+                vulnerability_CVE: params.name,
+                severity: '有限影响', // 静态内容
+                description: '空指针解引用', // 静态内容
+                affected_versions: '1.0.0 - 1.2.3', // 静态内容
+                fix_version: '1.2.4', // 静态内容
+              });
+              break;
+            case 1: // 第二个柱
+              setSelectedVulnerabilityDetails({
+                vulnerability_CVE: params.name,
+                severity: 'High', // 静态内容
+                description: 'This vulnerability allows privilege escalation.', // 静态内容
+                affected_versions: '2.0.0 - 2.1.0', // 静态内容
+                fix_version: '2.1.1', // 静态内容
+              });
+              break;
+            case 2: // 第三个柱
+              setSelectedVulnerabilityDetails({
+                vulnerability_CVE: params.name,
+                severity: 'Medium', // 静态内容
+                description: 'This vulnerability causes a denial of service.', // 静态内容
+                affected_versions: '3.0.0 - 3.0.5', // 静态内容
+                fix_version: '3.0.6', // 静态内容
+              });
+              break;
+            case 3: // 第四个柱
+              setSelectedVulnerabilityDetails({
+                vulnerability_CVE: params.name,
+                severity: 'Low', // 静态内容
+                description: 'This vulnerability has minimal impact.', // 静态内容
+                affected_versions: '4.0.0 - 4.0.2', // 静态内容
+                fix_version: '4.0.3', // 静态内容
+              });
+              break;
+            default:
+              setSelectedVulnerabilityDetails({
+                vulnerability_CVE: params.name,
+                severity: 'Unknown', // 静态内容
+                description: 'No additional details available.', // 静态内容
+                affected_versions: 'N/A', // 静态内容
+                fix_version: 'N/A', // 静态内容
+              });
+              break;
+          }
         }
       } catch (error) {
         console.error('获取漏洞详情失败:', error);
@@ -340,6 +397,101 @@ const TorNodeVisualization = () => {
     window.addEventListener('resize', () => vulnChart.resize());
   }, [vulnerabilityStats]);
 
+
+  useEffect(() => {
+    const vulnChart = echarts.init(document.getElementById('vulnChart')!);
+
+    const vulnOption = {
+      tooltip: {
+        trigger: 'item',
+        formatter: '{b}: {c}次',
+      },
+      xAxis: {
+        type: 'value',
+        boundaryGap: [0, 0.01],
+        name: '出现次数',
+      },
+      yAxis: {
+        type: 'category',
+        data: vulnerabilityStats.map((item) => item.vulnerability_CVE),
+      },
+      series: [
+        {
+          name: '漏洞数量',
+          type: 'bar',
+          data: vulnerabilityStats.map((item) => item.count),
+          itemStyle: {
+            color: '#FF6F61',
+          },
+        },
+      ],
+    };
+
+    vulnChart.setOption(vulnOption);
+    vulnChart.resize();
+
+    // 确保点击事件只绑定一次
+    const handleClick = async (params: any) => {
+      try {
+        if (params.name === vulnerabilityStats[0].vulnerability_CVE) {
+          setSelectedVulnerabilityDetails({
+            vulnerability_CVE: params.name,
+            severity: 'Low',
+            description: '空指针解引用',
+            affected_versions: '1.0.0 - 1.2.3',
+            fix_version: '1.2.4',
+          });
+        }else if (params.name === vulnerabilityStats[1].vulnerability_CVE) {
+          setSelectedVulnerabilityDetails({
+            vulnerability_CVE: params.name,
+            severity: '有限影响',
+            description: '空指针解引用',
+            affected_versions: '1.0.0 - 1.2.3',
+            fix_version: '1.2.4',
+          });
+        } else if (params.name === vulnerabilityStats[2].vulnerability_CVE) {
+          setSelectedVulnerabilityDetails({
+            vulnerability_CVE: params.name,
+            severity: '有限影响',
+            description: '空指针解引用',
+            affected_versions: '1.0.0 - 1.2.3',
+            fix_version: '1.2.4',
+          });
+        } else if (params.name === vulnerabilityStats[3].vulnerability_CVE) {
+          setSelectedVulnerabilityDetails({
+            vulnerability_CVE: params.name,
+            severity: 'HIGH',
+            description: 'Apache HTTP Server 2.4.59 及之前版本中的mod_proxy 中存在空指针取消引用，可能导致威胁者通过恶意请求使服务器崩溃，从而造成拒绝服务。',
+            affected_versions: '1.0.0 - 1.2.3',
+            fix_version: '1.2.4',
+          });
+        } else if (params.name === vulnerabilityStats[4].vulnerability_CVE) {
+          setSelectedVulnerabilityDetails({
+            vulnerability_CVE: params.name,
+            severity: 'HIGH',
+            description: 'Apache HTTP Server在Windows上的SSRF漏洞可能导致NTLM哈希通过恶意请求或内容泄露给恶意服务器。',
+            affected_versions: '1.0.0 - 1.2.3',
+            fix_version: '1.2.4',
+          });
+        } 
+        else {
+          const response = await getVulnerabilityDetails(params.name);
+          if (response.success && response.data) {
+            setSelectedVulnerabilityDetails(response.data);
+          }
+        }
+      } catch (error) {
+        console.error('获取漏洞详情失败:', error);
+      }
+    };
+
+    vulnChart.on('click', handleClick);
+
+    // 清理事件绑定
+    return () => {
+      vulnChart.off('click', handleClick);
+    };
+  }, [vulnerabilityStats]);
 
   // 切换节点类型
   const handleTypeChange = (type: React.SetStateAction<string>) => {
@@ -441,7 +593,7 @@ const TorNodeVisualization = () => {
         </Col>
         <Col span={8}>
           <Card title="Family 字段含义">
-            <p  style={{height: '250px' }}>
+            <p style={{ height: '250px' }}>
               在 Tor 网络中，family 表示多个节点属于同一个运营实体或相互信任的关系。
               通常情况下，Tor 会避免将属于同一个 family 的节点同时用于构建同一路径，
               以防止信息泄露或被中间人攻击。该字段可用于构建更加安全、隐私保护更强的路由。
@@ -453,11 +605,25 @@ const TorNodeVisualization = () => {
       {/* 漏洞说明 + 数据图表 */}
       <Row gutter={16} style={{ marginBottom: '20px' }}>
         <Col span={8}>
-          <Card title="漏洞说明" style={{height: '300px'}}>
-            <p>
-              以下图表展示了 Tor 网络中最常见的五个漏洞分布情况。点击柱状图可以查看详细的漏洞信息，
-              包括漏洞描述、严重程度、受影响版本和修复版本等信息。
-            </p>
+          <Card title="漏洞说明" style={{ height: '300px' }}>
+            {selectedVulnerabilityDetails ? (
+              <div>
+                <p>
+                  <strong>漏洞编号：</strong>
+                  {selectedVulnerabilityDetails.vulnerability_CVE}
+                </p>
+                <p>
+                  <strong>严重程度：</strong>
+                  {selectedVulnerabilityDetails.severity}
+                </p>
+                <p>
+                  <strong>漏洞描述：</strong>
+                  {selectedVulnerabilityDetails.description}
+                </p>
+              </div>
+            ) : (
+              <p>点击柱状图中的漏洞以查看详细信息。</p>
+            )}
           </Card>
         </Col>
         <Col span={16}>
@@ -471,27 +637,7 @@ const TorNodeVisualization = () => {
         </Col>
       </Row>
 
-      {/* 漏洞详情弹窗 */}
-      <Modal
-        title={`漏洞详情 - ${selectedVulnerability?.vulnerability_CVE}`}
-        open={isModalVisible}
-        onCancel={() => setIsModalVisible(false)}
-        footer={[
-          <Button key="close" onClick={() => setIsModalVisible(false)}>
-            关闭
-          </Button>
-        ]}
-      >
-        {selectedVulnerability && (
-          <div>
-            <p><strong>漏洞编号：</strong>{selectedVulnerability.vulnerability_CVE}</p>
-            <p><strong>严重程度：</strong>{selectedVulnerability.severity}</p>
-            <p><strong>漏洞描述：</strong>{selectedVulnerability.description}</p>
-            <p><strong>受影响版本：</strong>{selectedVulnerability.affected_versions}</p>
-            <p><strong>修复版本：</strong>{selectedVulnerability.fix_version}</p>
-          </div>
-        )}
-      </Modal>
+
     </div>
   );
 };
