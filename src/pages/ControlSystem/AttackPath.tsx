@@ -40,69 +40,116 @@ const VulnerabilityInfo: React.FC = () => {
     const vizRef = useRef<HTMLDivElement>(null);
     const vizInstance = useRef<NeoVis | null>(null);
 
-useEffect(() => {
-    if (vizRef.current && !graphInitialized) {
-        var config = {
-            containerId: vizRef.current.id, // 使用 ref 的 id
-            neo4j: {
-                serverUrl: "bolt://localhost:7687",
-                serverUser: "neo4j",
-                serverPassword: "wck330328"
-            },
-            labels: {
-                "攻击路径": {
-                    label: "name", // 显示节点的 `name` 属性
-                    group: "community", // 节点颜色分组
-                    size: 50, // 统一节点大小
-                    font: { size: 14, color: "#000000" }, // 节点字体配置
-                    title_properties: ["name"] // 在节点提示中显示 `name` 属性[^35^]
-                }
-            },
-            relationships: {
-                "攻击路径": {
-                    value: 'weight', // 假设关系有 `weight` 属性
-                    caption: true, // 显示关系的默认标签（类型）
-                    label: "顺序" // 显示关系的 `顺序` 属性（如果有）
-                }
-            },
-            visConfig: {
-                nodes: {
-                    shape: 'circle', // 设置节点形状为圆形
-                    size: 100, // 统一节点大小
-                    font: { size: 14, color: "#000000" } // 节点字体配置
+    useEffect(() => {
+        if (vizRef.current && !graphInitialized) {
+            var config = {
+                containerId: vizRef.current.id, // 使用 ref 的 id
+                neo4j: {
+                    serverUrl: "bolt://localhost:7687",
+                    serverUser: "neo4j",
+                    serverPassword: "wck330328"
                 },
-                edges: {
-                    arrows: {
-                        to: {
-                            enabled: true, // 显示箭头
-                            type: "arrow" // 箭头类型
-                        }
-                    },
-                    width: 1, // 关系线的粗细
-                    font: { size: 12, color: "#606266" } // 关系线字体配置
-                },
-                physics: {
-                    barnesHut: {
-                        gravitationalConstant: -200,  // 减小引力
-                        centralGravity: 0.01,          // 减小中心引力
-                        springLength: 150,             // 增加弹簧长度
-                        springConstant: 0.02           // 调整弹簧常数
+                labels: {
+                    "攻击路径": {
+                        label: "name", // 显示节点的 `name` 属性
+                        group: "community", // 节点颜色分组
+                        size: 50, // 统一节点大小
+                        font: { size: 14, color: "#000000" }, // 节点字体配置
+                        title_properties: ["name", "description", "节点标识符"] // 在节点提示中显示 `name` 属性[^35^]
                     }
-                }
-            },
-            initialCypher: "MATCH (n)-[r]->(m) RETURN n,r,m" // 查询语句
-        };
+                },
+                relationships: {
+                    "攻击路径": {
+                        value: 'weight', // 假设关系有 `weight` 属性
+                        caption: true, // 显示关系的默认标签（类型）
+                        label: "顺序" // 显示关系的 `顺序` 属性（如果有）
+                    }
+                },
+                visConfig: {
+                    nodes: {
+                        shape: 'circle', // 设置节点形状为圆形
+                        size: 100, // 统一节点大小
+                        font: { size: 14, color: "#000000" } // 节点字体配置
+                    },
+                    edges: {
+                        arrows: {
+                            to: {
+                                enabled: true, // 显示箭头
+                                type: "arrow" // 箭头类型
+                            }
+                        },
+                        width: 1, // 关系线的粗细
+                        font: { size: 12, color: "#606266" } // 关系线字体配置
+                    },
+                    physics: {
+                        barnesHut: {
+                            gravitationalConstant: -200,  // 减小引力
+                            centralGravity: 0.01,          // 减小中心引力
+                            springLength: 150,             // 增加弹簧长度
+                            springConstant: 0.02           // 调整弹簧常数
+                        }
+                    }
+                },
+                initialCypher: "MATCH (n)-[r]->(m) RETURN n,r,m" // 查询语句
+            };
 
-        vizInstance.current = new NeoVis(config);
-        vizInstance.current.render();
+            vizInstance.current = new NeoVis(config);
+            vizInstance.current.render();
             setTimeout(() => {
                 console.log('Graph initialized and rendered');
                 setGraphInitialized(true);
             }, 1000);  // 等 1 秒
+            vizInstance.current.registerOnEvent("clickNode", (event) => {
+                const node = event.node; // 获取被点击的节点
+                console.log("Clicked node:", node); // 打印节点数据
+                displayNodeProperties(node);
+            });
 
+        }
+    }, [graphInitialized]);
+    function displayNodeProperties(node) {
+        // 打印完整的节点数据
+        console.log("Node data:", node);
+
+        // 检查 node.properties 是否存在
+        if (!node.raw.properties || Object.keys(node.raw.properties).length === 0) {
+            console.error("Node properties are undefined or empty:", node);
+            alert("该节点没有属性信息！");
+            return;
+        }
+
+        // 创建一个模态框或其他方式来显示节点属性
+        const modal = document.createElement("div");
+        modal.style.position = "fixed";
+        modal.style.top = "50%";
+        modal.style.left = "50%";
+        modal.style.transform = "translate(-50%, -50%)";
+        modal.style.background = "white";
+        modal.style.padding = "20px";
+        modal.style.border = "1px solid black";
+        modal.style.zIndex = "1000";
+
+        const title = document.createElement("h3");
+        title.textContent = `${node.raw.properties.name || "Unnamed Node"}`; // 提供默认值
+        modal.appendChild(title);
+
+        const propertiesList = document.createElement("ul");
+        for (const key in node.raw.properties) {
+            const listItem = document.createElement("li");
+            listItem.textContent = `${key}: ${node.raw.properties[key]}`;
+            propertiesList.appendChild(listItem);
+        }
+        modal.appendChild(propertiesList);
+
+        const closeButton = document.createElement("button");
+        closeButton.textContent = "Close";
+        closeButton.onclick = () => {
+            document.body.removeChild(modal);
+        };
+        modal.appendChild(closeButton);
+
+        document.body.appendChild(modal);
     }
-}, [graphInitialized]);
-
 
     useEffect(() => {
         console.log("vizRef:", vizRef.current);
