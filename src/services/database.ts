@@ -105,3 +105,18 @@ export async function getPortInfo(ip: string) {
     params: { ip },
   });
 }
+
+export async function getNodeAliveStats() {
+  return request<API.ApiResponse<{
+    time: string;
+    true_count: number;
+    false_count: number;
+  }[]>>('/api/node/alive-stats');
+}
+
+export async function getLatestNodeAliveRatio() {
+  return request<API.ApiResponse<{
+    true_count: number;
+    false_count: number;
+  }>>('/api/node/latest-alive-ratio');
+}

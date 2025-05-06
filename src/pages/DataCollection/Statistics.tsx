@@ -8,7 +8,7 @@ import { Card, Col, Row, Table, message } from 'antd';
 import * as echarts from 'echarts';
 import React, { useEffect, useState } from 'react';
 import EChartComponent from '../../components/EChartComponent'; // 引入封装的组件
-import { getTorProfile, getLatestTime, getCClassAliveData, getDefaultCClassAliveData, getNodeStatusStats, getTopFiveCountries, getNodeStatusTimeSeries, getCountryDistribution } from '@/services/database';
+import { getTorProfile, getLatestTime, getCClassAliveData, getDefaultCClassAliveData, getNodeStatusStats, getTopFiveCountries, getNodeAliveStats, getCountryDistribution, getLatestNodeAliveRatio } from '@/services/database';
 import './Statistics.css';
 import { history } from 'umi';
 
@@ -36,15 +36,19 @@ const Statistics: React.FC = () => {
   const [nodeStatusLoading, setNodeStatusLoading] = useState(false);
   const [topFiveCountries, setTopFiveCountries] = useState<{country: string, count: number}[]>([]);
   const [topFiveCountriesLoading, setTopFiveCountriesLoading] = useState(false);
-  const [nodeStatusTimeSeries, setNodeStatusTimeSeries] = useState<{
+  const [nodeAliveStats, setNodeAliveStats] = useState<{
     time: string;
-    up: number;
-    down: number;
-    unknown: number;
+    true_count: number;
+    false_count: number;
   }[]>([]);
-  const [nodeStatusTimeSeriesLoading, setNodeStatusTimeSeriesLoading] = useState(false);
+  const [nodeAliveStatsLoading, setNodeAliveStatsLoading] = useState(false);
   const [countryData, setCountryData] = useState<{ name: string; value: number }[]>([]);
   const [mapLoading, setMapLoading] = useState(false);
+  const [latestAliveRatio, setLatestAliveRatio] = useState<{
+    true_count: number;
+    false_count: number;
+  }>({ true_count: 0, false_count: 0 });
+  const [latestAliveRatioLoading, setLatestAliveRatioLoading] = useState(false);
 
   useEffect(() => {
     // 初始化 ECharts 实例
@@ -198,17 +202,30 @@ const Statistics: React.FC = () => {
       setTopFiveCountriesLoading(false);
     };
 
-    const fetchNodeStatusTimeSeries = async () => {
-      setNodeStatusTimeSeriesLoading(true);
+    const fetchNodeAliveStats = async () => {
+      setNodeAliveStatsLoading(true);
       try {
-        const response = await getNodeStatusTimeSeries();
+        const response = await getNodeAliveStats();
         if (response.success) {
-          setNodeStatusTimeSeries(response.data);
+          setNodeAliveStats(response.data);
         }
       } catch (error) {
-        console.error('获取节点状态时间序列数据失败:', error);
+        console.error('获取节点存活统计数据失败:', error);
       }
-      setNodeStatusTimeSeriesLoading(false);
+      setNodeAliveStatsLoading(false);
+    };
+
+    const fetchLatestAliveRatio = async () => {
+      setLatestAliveRatioLoading(true);
+      try {
+        const response = await getLatestNodeAliveRatio();
+        if (response.success) {
+          setLatestAliveRatio(response.data);
+        }
+      } catch (error) {
+        console.error('获取最新节点存活占比数据失败:', error);
+      }
+      setLatestAliveRatioLoading(false);
     };
 
     fetchTorProfile();
@@ -216,7 +233,8 @@ const Statistics: React.FC = () => {
     fetchDefaultCClassAliveData();
     fetchNodeStatusStats();
     fetchTopFiveCountries();
-    fetchNodeStatusTimeSeries();
+    fetchNodeAliveStats();
+    fetchLatestAliveRatio();
   }, []);
 
   const handleTableRowClick = (record: any) => {
@@ -445,7 +463,7 @@ const Statistics: React.FC = () => {
       <Row gutter={16} style={{ marginTop: '20px' }}>
         {/* 折线图 */}
         <Col span={18}>
-          <Card title="节点存活情况统计图" style={{ height: '100%' }} loading={nodeStatusTimeSeriesLoading}>
+          <Card title="节点存活情况统计图" style={{ height: '100%' }} loading={nodeAliveStatsLoading}>
             <EChartComponent
               option={{
                 tooltip: {
@@ -462,7 +480,7 @@ const Statistics: React.FC = () => {
                   }
                 },
                 legend: {
-                  data: ['存活节点', '未存活节点', '状态未知'],
+                  data: ['存活节点', '未存活节点'],
                   top: 10
                 },
                 grid: {
@@ -474,7 +492,7 @@ const Statistics: React.FC = () => {
                 xAxis: {
                   type: 'category',
                   boundaryGap: false,
-                  data: nodeStatusTimeSeries.map(item => item.time),
+                  data: nodeAliveStats.map(item => item.time),
                   axisLabel: {
                     rotate: 45,
                     interval: 'auto',
@@ -492,7 +510,7 @@ const Statistics: React.FC = () => {
                     name: '存活节点',
                     type: 'line',
                     smooth: true,
-                    data: nodeStatusTimeSeries.map(item => item.up),
+                    data: nodeAliveStats.map(item => item.true_count),
                     areaStyle: {
                       color: 'rgba(82, 196, 26, 0.2)'
                     },
@@ -507,7 +525,7 @@ const Statistics: React.FC = () => {
                     name: '未存活节点',
                     type: 'line',
                     smooth: true,
-                    data: nodeStatusTimeSeries.map(item => item.down),
+                    data: nodeAliveStats.map(item => item.false_count),
                     areaStyle: {
                       color: 'rgba(245, 34, 45, 0.2)'
                     },
@@ -516,21 +534,6 @@ const Statistics: React.FC = () => {
                     },
                     itemStyle: {
                       color: '#f5222d'
-                    }
-                  },
-                  {
-                    name: '状态未知',
-                    type: 'line',
-                    smooth: true,
-                    data: nodeStatusTimeSeries.map(item => item.unknown),
-                    areaStyle: {
-                      color: 'rgba(250, 173, 20, 0.2)'
-                    },
-                    lineStyle: {
-                      color: '#faad14'
-                    },
-                    itemStyle: {
-                      color: '#faad14'
                     }
                   }
                 ]
@@ -542,7 +545,7 @@ const Statistics: React.FC = () => {
 
         {/* 饼状图 */}
         <Col span={6}>
-          <Card title="存活/未存活 节点占比" style={{ height: '100%' }} loading={nodeStatusLoading}>
+          <Card title="存活/未存活 节点占比" style={{ height: '100%' }} loading={latestAliveRatioLoading}>
             <EChartComponent
               option={{
                 tooltip: {
@@ -552,7 +555,7 @@ const Statistics: React.FC = () => {
                 legend: {
                   orient: 'vertical',
                   left: 'right',
-                  data: nodeStatusStats.map(item => item.status),
+                  data: ['存活节点', '未存活节点'],
                 },
                 series: [
                   {
@@ -563,7 +566,7 @@ const Statistics: React.FC = () => {
                     label: {
                       show: true,
                       position: 'center',
-                      formatter: `节点总数\n${nodeStatusStats.reduce((sum, item) => sum + item.count, 0)}`,
+                      formatter: `节点总数\n${latestAliveRatio.true_count + latestAliveRatio.false_count}`,
                       fontSize: 18,
                       fontWeight: 'bold',
                     },
@@ -577,10 +580,18 @@ const Statistics: React.FC = () => {
                     labelLine: {
                       show: false,
                     },
-                    data: nodeStatusStats.map(item => ({
-                      value: item.count,
-                      name: item.status
-                    })),
+                    data: [
+                      { 
+                        value: latestAliveRatio.true_count, 
+                        name: '存活节点',
+                        itemStyle: { color: '#52c41a' }
+                      },
+                      { 
+                        value: latestAliveRatio.false_count, 
+                        name: '未存活节点',
+                        itemStyle: { color: '#f5222d' }
+                      }
+                    ],
                   },
                 ],
               }}

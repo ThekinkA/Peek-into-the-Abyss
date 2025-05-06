@@ -487,4 +487,61 @@ export default {
       });
     }
   },
+
+  'GET /api/node/alive-stats': async (req: Request, res: Response) => {
+    try {
+      const [rows] = await pool.query(`
+        SELECT 
+          DATE_FORMAT(time, '%Y-%m-%d %H:%i') as time,
+          true_count,
+          false_count
+        FROM true_false_counts2
+        ORDER BY time ASC
+      `);
+
+      res.send({
+        success: true,
+        data: rows,
+      });
+    } catch (error) {
+      res.status(500).send({
+        success: false,
+        errorMessage: error.message,
+      });
+    }
+  },
+
+  'GET /api/node/latest-alive-ratio': async (req: Request, res: Response) => {
+    try {
+      const [rows] = await pool.query(`
+        SELECT 
+          true_count,
+          false_count
+        FROM true_false_counts2
+        ORDER BY time DESC
+        LIMIT 1
+      `);
+
+      if (rows.length === 0) {
+        res.send({
+          success: true,
+          data: {
+            true_count: 0,
+            false_count: 0
+          }
+        });
+        return;
+      }
+
+      res.send({
+        success: true,
+        data: rows[0]
+      });
+    } catch (error) {
+      res.status(500).send({
+        success: false,
+        errorMessage: error.message
+      });
+    }
+  },
 };
