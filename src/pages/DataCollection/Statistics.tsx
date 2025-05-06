@@ -236,6 +236,19 @@ const Statistics: React.FC = () => {
     fetchNodeAliveStats();
     fetchLatestAliveRatio();
   }, []);
+  const handleTableRowClick1 = async (record: any) => {
+    setCClassAliveLoading(true);
+    try {
+      const response = await getCClassAliveData(record.IP);
+      if (response.success) {
+        setCClassAliveData(response.data);
+        setSelectedIp(record.IP);
+      }
+    } catch (error) {
+      console.error('获取C段存活数据失败:', error);
+    }
+    setCClassAliveLoading(false);
+  };
 
   const handleTableRowClick = (record: any) => {
     history.push(`/data-collection/details?ip=${record.IP}`);
@@ -373,7 +386,7 @@ const Statistics: React.FC = () => {
               pagination={{ pageSize: 5 }}
               style={{ marginTop: '20px' }}
               onRow={(record) => ({
-                onClick: () => handleTableRowClick(record),
+                onClick: () => handleTableRowClick1(record),
               })}
             />
           </Card>
