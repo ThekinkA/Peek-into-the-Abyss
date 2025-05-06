@@ -243,7 +243,7 @@ const SituationAwareness: React.FC = () => {
           background: '#1c1c1c',
           color: '#fff',
           borderBottom: '1px solid #333',
-          width: '100%',
+          width: '89%',
           maxWidth: '1740px', // 设置最大宽度
           marginLeft: '20px',
           paddingLeft: '20px',
