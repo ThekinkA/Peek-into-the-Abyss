@@ -515,8 +515,14 @@ const Statistics: React.FC = () => {
                 yAxis: {
                   type: 'value',
                   name: '节点数量',
-                  interval: 1,
-                  minInterval: 1
+                  min: 1000,
+                  max: 12000,
+                  interval: 2000,
+                  axisLabel: {
+                    formatter: function(value: number) {
+                      return value.toLocaleString();
+                    }
+                  }
                 },
                 series: [
                   {
@@ -528,7 +534,8 @@ const Statistics: React.FC = () => {
                       color: 'rgba(82, 196, 26, 0.2)'
                     },
                     lineStyle: {
-                      color: '#52c41a'
+                      color: '#52c41a',
+                      width: 2
                     },
                     itemStyle: {
                       color: '#52c41a'
@@ -543,7 +550,8 @@ const Statistics: React.FC = () => {
                       color: 'rgba(245, 34, 45, 0.2)'
                     },
                     lineStyle: {
-                      color: '#f5222d'
+                      color: '#f5222d',
+                      width: 2
                     },
                     itemStyle: {
                       color: '#f5222d'
