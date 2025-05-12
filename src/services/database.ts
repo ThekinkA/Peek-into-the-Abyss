@@ -1,5 +1,17 @@
 import { request } from 'umi';
 
+export interface CClassAliveData {
+  id: number;
+  original_ip: string;
+  alive_count: number;
+  dead_count: number;
+  host1: string;
+  host2: string;
+  host3: string;
+  host4: string;
+  host5: string;
+}
+
 export async function getNodeDistribution() {
   return request<API.ApiResponse<API.NodeDistribution[]>>('/api/node/distribution');
 }
@@ -21,13 +33,13 @@ export async function getIpCounts() {
 }
 
 export async function getCClassAliveData(originalIp: string) {
-  return request<API.ApiResponse<API.CClassAliveData>>('/api/node/c-class-alive', {
+  return request<API.ApiResponse<CClassAliveData>>('/api/node/c-class-alive', {
     params: { originalIp },
   });
 }
 
 export async function getDefaultCClassAliveData() {
-  return request<API.ApiResponse<API.CClassAliveData>>('/api/node/default-c-class-alive');
+  return request<API.ApiResponse<CClassAliveData>>('/api/node/default-c-class-alive');
 }
 
 export async function getNodeCategoryStats() {

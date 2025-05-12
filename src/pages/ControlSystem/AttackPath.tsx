@@ -6,7 +6,7 @@ import { NeoVis } from 'neovis.js';
 import './AttackPath.less';
 import { useNavigate } from 'react-router-dom';
 import { RightOutlined } from '@ant-design/icons';
-import { values } from 'lodash';
+import { getCClassAliveData, getDefaultCClassAliveData, CClassAliveData } from '@/services/database';
 
 const { Search } = Input;
 
@@ -14,20 +14,9 @@ const VulnerabilityInfo: React.FC = () => {
     const [show, setShow] = useState(false);
     const [loading, setLoading] = useState(false);
     const [detailData, setDetailData] = useState<{ cve: string; dkv: string } | null>(null);
-    const [chartShow, setChartShow] = useState(false);
     const [targetIp, setTargetIp] = useState('1.175.69.141'); // 默认IP
-    const [recentIps, setRecentIps] = useState([
-        '1.175.69.5',
-        '1.175.69.7',
-        '1.175.69.8',
-        '1.175.69.20',
-        '1.175.69.30',
-    ]);
-    const [clearAll, setClearAll] = useState(true);
-    const [echartsNode, setEchartsNode] = useState([]); // 节点数组
-    const [nodesRelation, setNodesRelation] = useState([]); // 关系线数组
-    const [category, setCategory] = useState([]); // echarts 图例数据数
-    const [knowlegGraphshow, setKnowlegGraphshow] = useState(false); // 控制知识图谱显示
+    const [cClassData, setCClassData] = useState<CClassAliveData | null>(null);
+    const [recentIps, setRecentIps] = useState<string[]>([]);
     const [canJump, setCanJump] = useState(false);
     const navigate = useNavigate();
 
@@ -335,7 +324,6 @@ const VulnerabilityInfo: React.FC = () => {
             setLoading(false);
             setCanJump(true);
         }, 300);
-        setChartShow(true);
         setTimeout(() => {
             generateBarChart();
         }, 300);
@@ -398,12 +386,13 @@ const VulnerabilityInfo: React.FC = () => {
         };
     };
 
-    const handleSearch = (value: string) => {
+    const handleSearch = async (value: string) => {
         if (value.trim() === '') {
             message.warning('请输入IP地址');
             return;
         }
         setTargetIp(value.trim());
+        await fetchCClassData(value.trim());
     };
 
     const handlePointClick = (ip: string) => {
@@ -412,9 +401,9 @@ const VulnerabilityInfo: React.FC = () => {
 
     useEffect(() => {
         setTimeout(() => {
-            setKnowlegGraphshow(true);
+            setCanJump(true);
         }, 4000);
-    }, [clearAll]);
+    }, []);
 
     const handleRunVul = async () => {
         setLoading(true);
@@ -467,6 +456,56 @@ const VulnerabilityInfo: React.FC = () => {
         }
     };
 
+    // 获取 C 段 IP 数据
+    const fetchCClassData = async (ip: string) => {
+        try {
+            const response = await getCClassAliveData(ip);
+            if (response.success && response.data) {
+                setCClassData(response.data);
+                // 更新右侧显示的 IP 列表
+                const ips = [
+                    response.data.host1,
+                    response.data.host2,
+                    response.data.host3,
+                    response.data.host4,
+                    response.data.host5
+                ].filter(ip => ip); // 过滤掉空值
+                setRecentIps(ips);
+            } else {
+                message.warning('未找到该 IP 的 C 段数据');
+                setRecentIps([]);
+            }
+        } catch (error) {
+            message.error('获取 C 段数据失败');
+            console.error('获取 C 段数据失败:', error);
+            setRecentIps([]);
+        }
+    };
+
+    // 组件加载时获取默认数据
+    useEffect(() => {
+        const fetchDefaultData = async () => {
+            try {
+                const response = await getDefaultCClassAliveData();
+                if (response.success && response.data) {
+                    setCClassData(response.data);
+                    setTargetIp(response.data.original_ip);
+                    const ips = [
+                        response.data.host1,
+                        response.data.host2,
+                        response.data.host3,
+                        response.data.host4,
+                        response.data.host5
+                    ].filter(ip => ip);
+                    setRecentIps(ips);
+                }
+            } catch (error) {
+                console.error('获取默认 C 段数据失败:', error);
+            }
+        };
+        fetchDefaultData();
+    }, []);
+
     return (
         <div className="vulnerability-container">
             {/* 第一行：目标IP + 搜索功能 */}
@@ -503,7 +542,7 @@ const VulnerabilityInfo: React.FC = () => {
                 </Col>
                 <Col span={4}>
                     <div className="curve-container" style={{ height: '600px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-around', background: 'linear-gradient(to top, #8B0000, #FF0000)', borderRadius: '12px', padding: '10px' }}>
-                        {recentIps.map((ip, index) => (
+                        {recentIps.map((ip) => (
                             <div
                                 key={ip}
                                 onClick={() => handlePointClick(ip)}
@@ -515,9 +554,23 @@ const VulnerabilityInfo: React.FC = () => {
                                     border: '2px solid #000',
                                     cursor: 'pointer',
                                     animation: 'pulse 1.5s infinite',
+                                    position: 'relative'
                                 }}
-                                title={ip}
-                            ></div>
+                                title={`C段IP: ${ip}`}
+                            >
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '25px',
+                                    left: '50%',
+                                    transform: 'translateX(-50%)',
+                                    whiteSpace: 'nowrap',
+                                    fontSize: '12px',
+                                    color: '#fff',
+                                    textShadow: '0 0 2px #000'
+                                }}>
+                                    {ip}
+                                </div>
+                            </div>
                         ))}
                     </div>
                 </Col>
