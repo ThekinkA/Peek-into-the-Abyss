@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Col, Row, Statistic, Button, Tooltip, Table, Modal } from 'antd';
+import { Card, Col, Row, Statistic, Button, Tooltip, Table, Pagination } from 'antd';
 import { GlobalOutlined } from '@ant-design/icons';
 import * as echarts from 'echarts';
 import './TorOverview.css'; // 自定义样式文件
@@ -53,9 +53,9 @@ const TorNodeVisualization = () => {
   const [mapData, setMapData] = useState({}); // 定义地图数据
   const [activeType, setActiveType] = useState('all'); // 当前显示的节点类型
   const [pagination, setPagination] = useState({
-    entry: { current: 1, pageSize: 10 },
-    relay: { current: 1, pageSize: 10 },
-    exit: { current: 1, pageSize: 10 },
+    entry: { current: 1, pageSize: 3 }, // 每页显示 3 条
+    relay: { current: 1, pageSize: 3 },
+    exit: { current: 1, pageSize: 3 },
   });
   const [nodeStats, setNodeStats] = useState({
     entry: 0,
@@ -68,21 +68,9 @@ const TorNodeVisualization = () => {
     exit: []
   });
   const [vulnerabilityStats, setVulnerabilityStats] = useState<{ vulnerability_CVE: string, count: number }[]>([]);
-  const [selectedVulnerability, setSelectedVulnerability] = useState<{
-    vulnerability_CVE: string;
-    description: string;
-    severity: string;
-    affected_versions: string;
-    fix_version: string;
-  } | null>(null);
+  const [selectedVulnerability, setSelectedVulnerability] = useState<null>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [selectedVulnerabilityDetails, setSelectedVulnerabilityDetails] = useState<{
-    vulnerability_CVE: string;
-    description: string;
-    severity: string;
-    affected_versions: string;
-    fix_version: string;
-  } | null>(null);
+  const [selectedVulnerabilityDetails, setSelectedVulnerabilityDetails] = useState<null>(null);
 
   // 获取节点分类统计
   useEffect(() => {
@@ -397,7 +385,6 @@ const TorNodeVisualization = () => {
     window.addEventListener('resize', () => vulnChart.resize());
   }, [vulnerabilityStats]);
 
-
   useEffect(() => {
     const vulnChart = echarts.init(document.getElementById('vulnChart')!);
 
@@ -441,7 +428,7 @@ const TorNodeVisualization = () => {
             affected_versions: '1.0.0 - 1.2.3',
             fix_version: '1.2.4',
           });
-        }else if (params.name === vulnerabilityStats[1].vulnerability_CVE) {
+        } else if (params.name === vulnerabilityStats[1].vulnerability_CVE) {
           setSelectedVulnerabilityDetails({
             vulnerability_CVE: params.name,
             severity: '有限影响',
@@ -473,8 +460,7 @@ const TorNodeVisualization = () => {
             affected_versions: '1.0.0 - 1.2.3',
             fix_version: '1.2.4',
           });
-        } 
-        else {
+        } else {
           const response = await getVulnerabilityDetails(params.name);
           if (response.success && response.data) {
             setSelectedVulnerabilityDetails(response.data);
@@ -506,8 +492,6 @@ const TorNodeVisualization = () => {
       [type]: { current: page, pageSize },
     }));
   };
-
-
 
   return (
     <div>
@@ -636,21 +620,19 @@ const TorNodeVisualization = () => {
           </Card>
         </Col>
       </Row>
-
-
     </div>
   );
 };
 
 const NodeCard = ({
-  type,
-  data,
-  showDetails,
-  onToggle,
-  pagination,
-  onPaginationChange,
-  totalCount,
-}: {
+                    type,
+                    data,
+                    showDetails,
+                    onToggle,
+                    pagination,
+                    onPaginationChange,
+                    totalCount,
+                  }: {
   type: 'entry' | 'relay' | 'exit';
   data: any[];
   showDetails: boolean;
@@ -708,8 +690,8 @@ const NodeCard = ({
             columns={[
               {
                 title: 'IP 地址',
-                dataIndex: 'IP',
-                key: 'IP',
+                dataIndex: 'ip',
+                key: 'ip',
               },
               {
                 title: '状态',
@@ -735,14 +717,14 @@ const NodeCard = ({
               },
             ]}
             pagination={{
-              pageSize: pagination.pageSize,
+              pageSize: 3, // 每页显示 3 条
               total: data.length,
               current: pagination.current,
               onChange: (page) => onPaginationChange(type, page, pagination.pageSize),
               showSizeChanger: false,
             }}
             size="small"
-            rowKey="IP"
+            rowKey="ip"
             style={{ color: 'white' }}
           />
           <Button
