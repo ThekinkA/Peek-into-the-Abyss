@@ -475,6 +475,202 @@ const SituationAwareness: React.FC = () => {
           </Col>
         </Row>
       </div>
+      <div style={{ padding: '20px', maxWidth: '91.5%' }}>
+        <Card title="节点脆弱性情况" bodyStyle={{ background: '#1c1c1c', color: '#fff' }}>
+          <Row gutter={[16, 16]}>
+            {/* 高脆弱性标签 */}
+            <Col span={8}>
+              <div
+                style={{
+                  background: '#FFB3A7', // 调整为淡红色
+                  color: '#fff',
+                  padding: '10px',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <div
+                  style={{
+                    background: '#FF6F61', // 深红色
+                    color: '#fff',
+                    padding: '12px 20px', // 调整大小
+                    borderRadius: '8px', // 调整圆角
+                    fontWeight: 'bold',
+                    marginRight: '10px', // 与左半边稍微贴合
+                  }}
+                >
+                  高脆弱性节点
+                </div>
+                <span style={{ fontSize: '14px', color: '#fff' }}>70-100</span>
+              </div>
+            </Col>
+
+            {/* 中脆弱性标签 */}
+            <Col span={8}>
+              <div
+                style={{
+                  background: '#FFE599', // 调整为淡黄色
+                  color: '#fff',
+                  padding: '10px',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <div
+                  style={{
+                    background: '#F4D03F', // 深黄色
+                    color: '#fff',
+                    padding: '12px 20px', // 调整大小
+                    borderRadius: '8px', // 调整圆角
+                    fontWeight: 'bold',
+                    marginRight: '10px', // 与左半边稍微贴合
+                  }}
+                >
+                  中脆弱性节点
+                </div>
+                <span style={{ fontSize: '14px', color: '#fff' }}>40-70</span>
+              </div>
+            </Col>
+
+            {/* 低脆弱性标签 */}
+            <Col span={8}>
+              <div
+                style={{
+                  background: '#B3E5D6', // 调整为淡绿色
+                  color: '#fff',
+                  padding: '10px',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <div
+                  style={{
+                    background: '#1ABC9C', // 深绿色
+                    color: '#fff',
+                    padding: '12px 20px', // 调整大小
+                    borderRadius: '8px', // 调整圆角
+                    fontWeight: 'bold',
+                    marginRight: '10px', // 与左半边稍微贴合
+                  }}
+                >
+                  低脆弱性节点
+                </div>
+                <span style={{ fontSize: '14px', color: '#fff' }}>0-40</span>
+              </div>
+            </Col>
+          </Row>
+
+          <Row gutter={[16, 16]} style={{ marginTop: '20px' }}>
+            {/* 脆弱性占比饼状图 */}
+            <Col span={12}>
+              <ReactECharts
+                option={{
+                  tooltip: {
+                    trigger: 'item',
+                    formatter: '{b}: {c} ({d}%)',
+                  },
+                  legend: {
+                    bottom: 0,
+                    textStyle: { color: '#fff' },
+                  },
+                  series: [
+                    {
+                      name: '脆弱性占比',
+                      type: 'pie',
+                      radius: '50%',
+                      data: [
+                        { value: 40, name: '高脆弱性', itemStyle: { color: '#FF6F61' } }, // 深红色
+                        { value: 35, name: '中脆弱性', itemStyle: { color: '#F4D03F' } }, // 深黄色
+                        { value: 25, name: '低脆弱性', itemStyle: { color: '#1ABC9C' } }, // 深绿色
+                      ],
+                      itemStyle: {
+                        borderRadius: 8,
+                        borderColor: '#1c1c1c',
+                        borderWidth: 2,
+                      },
+                      label: {
+                        color: '#fff',
+                      },
+                    },
+                  ],
+                }}
+                style={{ height: '300px' }}
+              />
+            </Col>
+
+            {/* 周期性热力矩阵 */}
+            <Col span={12}>
+              <ReactECharts
+                option={{
+                  tooltip: {
+                    position: 'top',
+                    formatter: (params: any) => `日期: ${params.name}<br/>数量: ${params.value[2]}`,
+                  },
+                  grid: {
+                    height: '60%',
+                    top: '10%',
+                  },
+                  xAxis: {
+                    type: 'category',
+                    data: ['高', '中', '低'],
+                    splitArea: { show: true },
+                    axisLabel: { color: '#fff' },
+                  },
+                  yAxis: {
+                    type: 'category',
+                    data: ['Day 6', 'Day 5', 'Day 4', 'Day 3', 'Day 2', 'Day 1'],
+                    splitArea: { show: true },
+                    axisLabel: { color: '#fff' },
+                  },
+                  visualMap: {
+                    min: 0,
+                    max: 50,
+                    calculable: true,
+                    orient: 'horizontal',
+                    left: 'center',
+                    bottom: '5%',
+                    textStyle: { color: '#fff' },
+                  },
+                  series: [
+                    {
+                      name: '脆弱性数量',
+                      type: 'heatmap',
+                      data: [
+                        [0, 0, 10],
+                        [0, 1, 19],
+                        [0, 2, 8],
+                        [1, 0, 15],
+                        [1, 1, 25],
+                        [1, 2, 20],
+                        [2, 0, 5],
+                        [2, 1, 10],
+                        [2, 2, 30],
+                      ],
+                      label: {
+                        show: true,
+                        color: '#fff',
+                      },
+                      emphasis: {
+                        itemStyle: {
+                          shadowBlur: 10,
+                          shadowColor: 'rgba(0, 0, 0, 0.5)',
+                        },
+                      },
+                    },
+                  ],
+                }}
+                style={{ height: '300px' }}
+              />
+            </Col>
+          </Row>
+        </Card>
+      </div>
     </>
   );
 };
