@@ -358,7 +358,7 @@ const Statistics: React.FC = () => {
           <Card title="Tor官网数据统计" style={{ height: '100%' }}>
             <Row gutter={16} style={{ marginTop: '20px' }}>
               <Col span={8}>
-                <Card title="第 XXX 次更新 Tor 官网数据" style={{ height: '100%' }}>
+                <Card title="第 54 次更新 Tor 官网数据" style={{ height: '100%' }}>
                   <div style={{ fontSize: '16px', textAlign: 'center', padding: '20px' }}>
                     本次更新包含最新的 Tor 节点信息。
                   </div>
