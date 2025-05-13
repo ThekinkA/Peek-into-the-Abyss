@@ -236,15 +236,9 @@ const SituationAwareness: React.FC = () => {
   return (
     <>
       {/* 添加顶部说明和按钮 */}
-
-      <div style={{position: 'fixed',top:0,bottom:0,right:0,left:0, minHeight: '100vh'}}>
-        <StarryBackground/>
-        <Layout style={{position: 'fixed',top:0,bottom:0,right:0,left:0, zIndex: -1}}>
-        </Layout>
-      </div>
-
       <div
         style={{
+          zIndex: 1,
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -283,6 +277,12 @@ const SituationAwareness: React.FC = () => {
           }}
         />
       )}
+
+      <div style={{position: 'fixed', top: 0, bottom: 0, right: 0, left: 0, minHeight: '100vh', zIndex: 0}}>
+        <StarryBackground/>
+        <Layout style={{position: 'fixed', top: 0, bottom: 0, right: 0, left: 0, zIndex: -2}}>
+        </Layout>
+      </div>
 
       <div style={{padding: '20px'}}>
         <Row gutter={[50, 50]}>
