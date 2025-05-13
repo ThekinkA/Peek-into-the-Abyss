@@ -544,4 +544,49 @@ export default {
       });
     }
   },
+
+  'GET /api/node/vulnerability-distribution': async (req: Request, res: Response) => {
+    try {
+      const { level } = req.query;
+      
+      // 首先获取指定脆弱性级别的IP列表
+      const [vulNodes] = await pool.query(`
+        SELECT DISTINCT ip
+        FROM node_vul_assess
+        WHERE vulnerability_level = ?
+      `, [level]);
+
+      if (vulNodes.length === 0) {
+        res.send({
+          success: true,
+          data: []
+        });
+        return;
+      }
+
+      // 获取这些IP对应的国家分布
+      const ipList = vulNodes.map((node: any) => node.ip);
+      const [rows] = await pool.query(`
+        SELECT 
+          country,
+          COUNT(*) as count
+        FROM ip_with_country_city
+        WHERE ip IN (?)
+        AND country IS NOT NULL 
+        AND country != ''
+        GROUP BY country
+        ORDER BY count DESC
+      `, [ipList]);
+
+      res.send({
+        success: true,
+        data: rows
+      });
+    } catch (error) {
+      res.status(500).send({
+        success: false,
+        errorMessage: error.message
+      });
+    }
+  },
 };

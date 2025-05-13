@@ -132,3 +132,12 @@ export async function getLatestNodeAliveRatio() {
     false_count: number;
   }>>('/api/node/latest-alive-ratio');
 }
+
+export async function getVulnerabilityNodeDistribution(level: string) {
+  return request<API.ApiResponse<{
+    country: string;
+    count: number;
+  }[]>>('/api/node/vulnerability-distribution', {
+    params: { level },
+  });
+}

@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Card, Col, Row, Statistic, Button, Tooltip, Table } from 'antd';
 import * as echarts from 'echarts';
 import './TorOverview.css'; // 自定义样式文件
-import { getNodeCategoryStats, getNodeCategoryDetails, getVulnerabilityStats, getVulnerabilityDetails } from '@/services/database';
+import { getNodeCategoryStats, getNodeCategoryDetails, getVulnerabilityStats, getVulnerabilityDetails, getVulnerabilityNodeDistribution } from '@/services/database';
 
 // 颜色映射
 const typeColorMap = {
-  entry: '#FF5733',
-  relay: '#3498DB',
-  exit: '#2ECC71',
+  entry: '#FF6F61',  // 高脆弱性节点
+  relay: '#F4D03F',  // 中脆弱性节点
+  exit: '#B3E5D6',   // 低脆弱性节点
 };
 
 // 节点类型映射
@@ -16,6 +16,13 @@ const categoryMap = {
   entry: 'Guard',
   relay: 'Middle',
   exit: 'Exit'
+};
+
+// 节点类型映射
+const categoryMap1 = {
+  entry: '高风险',
+  relay: '中风险',
+  exit: '低风险'
 };
 
 // 将 NodeCard 组件定义移到这里
@@ -27,6 +34,7 @@ const NodeCard = ({
   pagination,
   onPaginationChange,
   totalCount,
+  activeRatio, // 新增属性
 }: {
   type: 'entry' | 'relay' | 'exit';
   data: any[];
@@ -35,6 +43,7 @@ const NodeCard = ({
   pagination: { current: number; pageSize: number };
   onPaginationChange: (type: string, page: number, pageSize: number) => void;
   totalCount: number;
+  activeRatio: number; // 新增属性
 }) => {
   const statusColor: { [key: string]: string } = {
     'up': 'green',
@@ -57,7 +66,7 @@ const NodeCard = ({
           <Statistic title="节点总数" value={totalCount} />
           <Statistic
             title="活跃占比"
-            value={(data.filter((n) => n.status === 'up').length / (data.length || 1)) * 100}
+            value={activeRatio} // 使用传递的活跃占比
             suffix="%"
           />
           <Button
@@ -140,6 +149,13 @@ const NodeCard = ({
   );
 };
 
+// 添加新的状态和类型定义
+interface NodeGeoData {
+  name: string;
+  value: number;
+}
+
+// 主组件 
 const TorNodeVisualization = () => {
   const [showDetails, setShowDetails] = useState({
     entry: false,
@@ -156,10 +172,14 @@ const TorNodeVisualization = () => {
     relay: 0,
     exit: 0
   });
-  const [nodeDetails, setNodeDetails] = useState({
+  const [nodeDetails, setNodeDetails] = useState<{
+    entry: { status: string }[];
+    relay: { status: string }[];
+    exit: { status: string }[];
+  }>({
     entry: [],
     relay: [],
-    exit: []
+    exit: [],
   });
   const [vulnerabilityStats, setVulnerabilityStats] = useState<{ vulnerability_CVE: string, count: number }[]>([]);
   const [selectedVulnerabilityDetails, setSelectedVulnerabilityDetails] = useState<{
@@ -169,6 +189,14 @@ const TorNodeVisualization = () => {
     affected_versions: string;
     fix_version: string;
   } | null>(null);
+  const [activeRatios, setActiveRatios] = useState({
+    entry: 0,
+    relay: 0,
+    exit: 0,
+  });
+  const [selectedNodeType, setSelectedNodeType] = useState<'entry' | 'relay' | 'exit'>('entry');
+  const [geoData, setGeoData] = useState<{name: string; value: number}[]>([]);
+  const [mapLoading, setMapLoading] = useState(false);
 
   // 获取节点分类统计
   useEffect(() => {
@@ -179,7 +207,7 @@ const TorNodeVisualization = () => {
           const stats = {
             entry: 0,
             relay: 0,
-            exit: 0
+            exit: 0,
           };
           response.data.forEach(item => {
             if (item.category === 'Guard') stats.entry = item.count;
@@ -193,17 +221,29 @@ const TorNodeVisualization = () => {
       }
     };
     fetchNodeStats();
-  }, []);
+  }, []); // 移除 nodeDetails 依赖
 
   // 获取节点详细信息
   const fetchNodeDetails = async (type: 'entry' | 'relay' | 'exit') => {
     try {
       const response = await getNodeCategoryDetails(categoryMap[type]);
       if (response.success && response.data) {
-        setNodeDetails(prev => ({
-          ...prev,
-          [type]: response.data
-        }));
+        setNodeDetails(prev => {
+          const newDetails = {
+            ...prev,
+            [type]: response.data
+          };
+          
+          // 修复活跃占比计算：使用实际获取到的节点数量作为分母
+          const newActiveRatios = {
+            entry: (newDetails.entry.filter((n) => n.status === 'up').length / newDetails.entry.length) * 100,
+            relay: (newDetails.relay.filter((n) => n.status === 'up').length / newDetails.relay.length) * 100,
+            exit: (newDetails.exit.filter((n) => n.status === 'up').length / newDetails.exit.length) * 100,
+          };
+          setActiveRatios(newActiveRatios);
+          
+          return newDetails;
+        });
       }
     } catch (error) {
       console.error('获取节点详情失败:', error);
@@ -212,10 +252,11 @@ const TorNodeVisualization = () => {
 
   // 当显示详情时获取数据
   useEffect(() => {
-    if (showDetails.entry) fetchNodeDetails('entry');
-    if (showDetails.relay) fetchNodeDetails('relay');
-    if (showDetails.exit) fetchNodeDetails('exit');
-  }, [showDetails]);
+    // 初始加载时就获取所有类型的节点数据
+    fetchNodeDetails('entry');
+    fetchNodeDetails('relay');
+    fetchNodeDetails('exit');
+  }, []); // 只在组件挂载时执行一次
 
   useEffect(() => {
     // 获取漏洞统计数据
@@ -328,65 +369,8 @@ const TorNodeVisualization = () => {
     vulnChart.resize();
 
     // 添加点击事件
-    vulnChart.on('click', async (params) => {
-      try {
-        const clickedIndex = vulnerabilityStats.findIndex(
-          (item) => item.vulnerability_CVE === params.name
-        );
-
-        if (clickedIndex !== -1) {
-          // 根据点击的柱状图索引设置对应的内容
-          switch (clickedIndex) {
-            case 0: // 第一个柱
-              setSelectedVulnerabilityDetails({
-                vulnerability_CVE: params.name,
-                severity: '有限影响', // 静态内容
-                description: '空指针解引用', // 静态内容
-                affected_versions: '1.0.0 - 1.2.3', // 静态内容
-                fix_version: '1.2.4', // 静态内容
-              });
-              break;
-            case 1: // 第二个柱
-              setSelectedVulnerabilityDetails({
-                vulnerability_CVE: params.name,
-                severity: 'High', // 静态内容
-                description: 'This vulnerability allows privilege escalation.', // 静态内容
-                affected_versions: '2.0.0 - 2.1.0', // 静态内容
-                fix_version: '2.1.1', // 静态内容
-              });
-              break;
-            case 2: // 第三个柱
-              setSelectedVulnerabilityDetails({
-                vulnerability_CVE: params.name,
-                severity: 'Medium', // 静态内容
-                description: 'This vulnerability causes a denial of service.', // 静态内容
-                affected_versions: '3.0.0 - 3.0.5', // 静态内容
-                fix_version: '3.0.6', // 静态内容
-              });
-              break;
-            case 3: // 第四个柱
-              setSelectedVulnerabilityDetails({
-                vulnerability_CVE: params.name,
-                severity: 'Low', // 静态内容
-                description: 'This vulnerability has minimal impact.', // 静态内容
-                affected_versions: '4.0.0 - 4.0.2', // 静态内容
-                fix_version: '4.0.3', // 静态内容
-              });
-              break;
-            default:
-              setSelectedVulnerabilityDetails({
-                vulnerability_CVE: params.name,
-                severity: 'Unknown', // 静态内容
-                description: 'No additional details available.', // 静态内容
-                affected_versions: 'N/A', // 静态内容
-                fix_version: 'N/A', // 静态内容
-              });
-              break;
-          }
-        }
-      } catch (error) {
-        console.error('获取漏洞详情失败:', error);
-      }
+    vulnChart.on('click', (params: { name: string }) => {
+      handleClick(params);
     });
 
     window.addEventListener('resize', () => vulnChart.resize());
@@ -425,58 +409,18 @@ const TorNodeVisualization = () => {
     vulnChart.resize();
 
     // 确保点击事件只绑定一次
-    const handleClick = async (params: any) => {
-      try {
-        if (params.name === vulnerabilityStats[0].vulnerability_CVE) {
-          setSelectedVulnerabilityDetails({
-            vulnerability_CVE: params.name,
-            severity: 'Low',
-            description: '空指针解引用',
-            affected_versions: '1.0.0 - 1.2.3',
-            fix_version: '1.2.4',
-          });
-        }else if (params.name === vulnerabilityStats[1].vulnerability_CVE) {
-          setSelectedVulnerabilityDetails({
-            vulnerability_CVE: params.name,
-            severity: '有限影响',
-            description: '空指针解引用',
-            affected_versions: '1.0.0 - 1.2.3',
-            fix_version: '1.2.4',
-          });
-        } else if (params.name === vulnerabilityStats[2].vulnerability_CVE) {
-          setSelectedVulnerabilityDetails({
-            vulnerability_CVE: params.name,
-            severity: '有限影响',
-            description: '空指针解引用',
-            affected_versions: '1.0.0 - 1.2.3',
-            fix_version: '1.2.4',
-          });
-        } else if (params.name === vulnerabilityStats[3].vulnerability_CVE) {
-          setSelectedVulnerabilityDetails({
-            vulnerability_CVE: params.name,
-            severity: 'HIGH',
-            description: 'Apache HTTP Server 2.4.59 及之前版本中的mod_proxy 中存在空指针取消引用，可能导致威胁者通过恶意请求使服务器崩溃，从而造成拒绝服务。',
-            affected_versions: '1.0.0 - 1.2.3',
-            fix_version: '1.2.4',
-          });
-        } else if (params.name === vulnerabilityStats[4].vulnerability_CVE) {
-          setSelectedVulnerabilityDetails({
-            vulnerability_CVE: params.name,
-            severity: 'HIGH',
-            description: 'Apache HTTP Server在Windows上的SSRF漏洞可能导致NTLM哈希通过恶意请求或内容泄露给恶意服务器。',
-            affected_versions: '1.0.0 - 1.2.3',
-            fix_version: '1.2.4',
-          });
-        } 
-        else {
+    const handleClick = (params: { name: string }) => {
+      const fetchDetails = async () => {
+        try {
           const response = await getVulnerabilityDetails(params.name);
           if (response.success && response.data) {
             setSelectedVulnerabilityDetails(response.data);
           }
+        } catch (error) {
+          console.error('获取漏洞详情失败:', error);
         }
-      } catch (error) {
-        console.error('获取漏洞详情失败:', error);
-      }
+      };
+      fetchDetails();
     };
 
     vulnChart.on('click', handleClick);
@@ -495,6 +439,107 @@ const TorNodeVisualization = () => {
     }));
   };
 
+  // 修改获取地理分布数据的函数
+  const fetchGeoData = async (type: 'entry' | 'relay' | 'exit') => {
+    setMapLoading(true);
+    try {
+      const response = await getVulnerabilityNodeDistribution(categoryMap1[type]);
+      if (response.success && response.data) {
+        // 转换为地图所需的数据格式
+        const geoData = response.data.map(item => ({
+          name: item.country,
+          value: item.count
+        }));
+        setGeoData(geoData);
+      }
+    } catch (error) {
+      console.error('获取地理分布数据失败:', error);
+    }
+    setMapLoading(false);
+  };
+
+  // 监听节点类型变化
+  useEffect(() => {
+    fetchGeoData(selectedNodeType);
+  }, [selectedNodeType]);
+
+  // 初始化地图
+  useEffect(() => {
+    const worldMap = echarts.init(document.getElementById('nodeWorldMap')!);
+    
+    const fetchMapData = async () => {
+      try {
+        const worldJson = await fetch('/geo/world.json').then(res => res.json());
+        echarts.registerMap('world', worldJson);
+        
+        // 更新地图配置
+        const updateMapOption = () => {
+          const colorMap = {
+            entry: ['#fff5f5', '#ffe0e0', '#ffc9c9', '#ffb3b3', '#ff9d9d', '#FF6F61'],  // 高风险
+            relay: ['#fff9e6', '#fff2cc', '#ffecb3', '#ffe599', '#ffdf80', '#F4D03F'],  // 中风险
+            exit: ['#f0f9f6', '#e1f3ed', '#d2ede4', '#c3e7db', '#b4e1d2', '#B3E5D6']   // 低风险
+          };
+
+          const maxValue = Math.max(...geoData.map(item => item.value), 1);
+          
+          const mapOption = {
+            title: {
+              text: `${categoryMap1[selectedNodeType]}节点全球分布`,
+              left: 'center',
+              top: '5%',
+              textStyle: {
+                color: '#333'
+              }
+            },
+            tooltip: {
+              trigger: 'item',
+              formatter: (params: any) => {
+                return `${params.name}<br/>节点数量：${params.value || 0}`;
+              }
+            },
+            visualMap: {
+              left: 'right',
+              min: 0,
+              max: maxValue,
+              inRange: {
+                color: colorMap[selectedNodeType]
+              },
+              text: ['高', '低'],
+              calculable: true
+            },
+            series: [
+              {
+                name: '节点分布',
+                type: 'map',
+                map: 'world',
+                roam: true,
+                emphasis: {
+                  label: {
+                    show: true
+                  }
+                },
+                data: geoData
+              }
+            ]
+          };
+          
+          worldMap.setOption(mapOption);
+        };
+
+        updateMapOption();
+        window.addEventListener('resize', () => worldMap.resize());
+      } catch (error) {
+        console.error('加载地图数据失败:', error);
+      }
+    };
+
+    fetchMapData();
+
+    return () => {
+      worldMap.dispose();
+    };
+  }, [selectedNodeType, geoData]);
+
   return (
     <div>
       {/* 节点类型卡片 */}
@@ -508,6 +553,7 @@ const TorNodeVisualization = () => {
             onToggle={() => setShowDetails((prev) => ({ ...prev, entry: !prev.entry }))}
             onPaginationChange={handlePaginationChange}
             totalCount={nodeStats.entry}
+            activeRatio={activeRatios.entry} // 新增属性
           />
         </Col>
         <Col span={8}>
@@ -519,6 +565,7 @@ const TorNodeVisualization = () => {
             onToggle={() => setShowDetails((prev) => ({ ...prev, relay: !prev.relay }))}
             onPaginationChange={handlePaginationChange}
             totalCount={nodeStats.relay}
+            activeRatio={activeRatios.relay} // 新增属性
           />
         </Col>
         <Col span={8}>
@@ -530,6 +577,7 @@ const TorNodeVisualization = () => {
             onToggle={() => setShowDetails((prev) => ({ ...prev, exit: !prev.exit }))}
             onPaginationChange={handlePaginationChange}
             totalCount={nodeStats.exit}
+            activeRatio={activeRatios.exit} // 新增属性
           />
         </Col>
       </Row>
@@ -542,12 +590,12 @@ const TorNodeVisualization = () => {
             bodyStyle={{ padding: 0 }}
             style={{ height: '400px' }}
           >
-            <div id="familyGraph" style={{ width: '100%', height: '400px' }}></div>
+            <div id="familyGraph" className="family-graph"></div>
           </Card>
         </Col>
         <Col span={8}>
           <Card title="Family 字段含义">
-            <p style={{ height: '250px' }}>
+            <p className="vuln-description">
               在 Tor 网络中，family 表示多个节点属于同一个运营实体或相互信任的关系。
               通常情况下，Tor 会避免将属于同一个 family 的节点同时用于构建同一路径，
               以防止信息泄露或被中间人攻击。该字段可用于构建更加安全、隐私保护更强的路由。
@@ -586,7 +634,63 @@ const TorNodeVisualization = () => {
             bodyStyle={{ padding: 0 }}
             style={{ height: '350px' }}
           >
-            <div id="vulnChart" style={{ width: '100%', height: '350px', paddingBottom: '50px' }}></div>
+            <div id="vulnChart" className="vuln-chart"></div>
+          </Card>
+        </Col>
+      </Row>
+
+      {/* 修改世界地图卡片标题 */}
+      <Row gutter={16} style={{ marginTop: '20px' }}>
+        <Col span={24}>
+          <Card 
+            title="节点脆弱性全球分布图" 
+            style={{ height: '100%' }}
+            loading={mapLoading}
+            extra={
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <Button 
+                  type={selectedNodeType === 'entry' ? 'primary' : 'default'}
+                  style={{ 
+                    backgroundColor: selectedNodeType === 'entry' ? '#FF6F61' : undefined,
+                    borderColor: '#FF6F61',
+                    color: selectedNodeType === 'entry' ? '#fff' : '#FF6F61',
+                    fontWeight: selectedNodeType === 'entry' ? 'bold' : 'normal',
+                    boxShadow: selectedNodeType === 'entry' ? '0 2px 0 rgba(255, 111, 97, 0.1)' : 'none',
+                  }}
+                  onClick={() => setSelectedNodeType('entry')}
+                >
+                  高脆弱性节点
+                </Button>
+                <Button 
+                  type={selectedNodeType === 'relay' ? 'primary' : 'default'}
+                  style={{ 
+                    backgroundColor: selectedNodeType === 'relay' ? '#F4D03F' : undefined,
+                    borderColor: '#F4D03F',
+                    color: selectedNodeType === 'relay' ? '#fff' : '#F4D03F',
+                    fontWeight: selectedNodeType === 'relay' ? 'bold' : 'normal',
+                    boxShadow: selectedNodeType === 'relay' ? '0 2px 0 rgba(244, 208, 63, 0.1)' : 'none',
+                  }}
+                  onClick={() => setSelectedNodeType('relay')}
+                >
+                  中脆弱性节点
+                </Button>
+                <Button 
+                  type={selectedNodeType === 'exit' ? 'primary' : 'default'}
+                  style={{ 
+                    backgroundColor: selectedNodeType === 'exit' ? '#B3E5D6' : undefined,
+                    borderColor: '#B3E5D6',
+                    color: selectedNodeType === 'exit' ? '#fff' : '#B3E5D6',
+                    fontWeight: selectedNodeType === 'exit' ? 'bold' : 'normal',
+                    boxShadow: selectedNodeType === 'exit' ? '0 2px 0 rgba(179, 229, 214, 0.1)' : 'none',
+                  }}
+                  onClick={() => setSelectedNodeType('exit')}
+                >
+                  低脆弱性节点
+                </Button>
+              </div>
+            }
+          >
+            <div id="nodeWorldMap" style={{ width: '100%', height: '500px' }}></div>
           </Card>
         </Col>
       </Row>
