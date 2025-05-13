@@ -15,6 +15,7 @@ const { Search } = Input;
 const VulnerabilityInfo: React.FC = () => {
     const [show, setShow] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [assessmentStep, setAssessmentStep] = useState<'initial' | 'assessed' | 'shown'>('initial');
     const [detailData, setDetailData] = useState<{ cve: string; dkv: string } | null>(null);
     const [targetIp, setTargetIp] = useState('1.175.69.141'); // 默认IP
     const [cClassData, setCClassData] = useState<CClassAliveData | null>(null);
@@ -324,7 +325,7 @@ const VulnerabilityInfo: React.FC = () => {
         setTimeout(() => {
             setShow(true);
             setLoading(false);
-            setCanJump(true);
+            setAssessmentStep('shown');
         }, 300);
         setTimeout(() => {
             generateBarChart();
@@ -415,12 +416,12 @@ const VulnerabilityInfo: React.FC = () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ targetIp }), // 将目标 IP 作为请求体发送
+                body: JSON.stringify({ targetIp }),
             });
             if (response.ok) {
                 const result = await response.json();
                 message.success(result.message || '脆弱性评估已触发');
-                handleShow(); // 更新 show 状态，显示组件
+                setAssessmentStep('assessed');
             } else {
                 const error = await response.json();
                 message.error(error.error || '触发脆弱性评估失败');
@@ -666,14 +667,14 @@ const VulnerabilityInfo: React.FC = () => {
             </Col>
           </Row>
 
-          {canJump && (
+          {(assessmentStep === 'assessed' || assessmentStep === 'shown') && (
             <div style={{marginTop: '40px', textAlign: 'center'}}>
               <Button
                 type="primary"
                 icon={<RightOutlined/>}
                 onClick={() => {
                   navigate('/control-system/result-analysis', {state: {ip: targetIp}});
-                  handleRunAttack(); // 跳转后运行 handleRunAttack 函数
+                  handleRunAttack();
                 }}
               >
                 可进行攻击路径推理
