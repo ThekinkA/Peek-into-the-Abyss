@@ -3,6 +3,8 @@ import { Card, Col, Row, Statistic, Button, Tooltip, Table, message } from 'antd
 import * as echarts from 'echarts';
 import './TorOverview.css'; // 自定义样式文件
 import { getNodeCategoryStats, getNodeCategoryDetails, getVulnerabilityStats, getVulnerabilityDetails, getVulnerabilityNodeDistribution } from '@/services/database';
+import { Layout } from 'antd'
+import StarryBackground from '@/components/Background'
 
 // 颜色映射
 const typeColorMap = {
@@ -552,7 +554,7 @@ const TorNodeVisualization = () => {
 
   return (
     <>
-      <div style={{position: 'fixed', top: 0, bottom: 0, right: 0, left: 0, minHeight: '100vh'}}>
+      <div style={{position: 'fixed', top: 0, bottom: 0, right: 0, left: 0, minHeight: '100vh', zIndex: 0}}>
         <StarryBackground/>
         <Layout style={{position: 'fixed', top: 0, bottom: 0, right: 0, left: 0, zIndex: -1}}>
         </Layout>
