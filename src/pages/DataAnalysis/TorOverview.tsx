@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, Col, Row, Statistic, Button, Tooltip, Table, message } from 'antd';
 import * as echarts from 'echarts';
 import './TorOverview.css'; // 自定义样式文件
-import { getNodeCategoryStats, getNodeCategoryDetails, getVulnerabilityStats, getVulnerabilityNodeDistribution } from '@/services/database';
+import { getNodeCategoryStats, getNodeCategoryDetails, getVulnerabilityStats, getVulnerabilityDetails, getVulnerabilityNodeDistribution } from '@/services/database';
 
 // 颜色映射
 const typeColorMap = {
@@ -200,7 +200,7 @@ const NodeCard = ({
   );
 };
 
-// 主组件 
+// 主组件
 const TorNodeVisualization = () => {
   const [showDetails, setShowDetails] = useState({
     entry: false,
@@ -272,7 +272,7 @@ const TorNodeVisualization = () => {
             ...prev,
             [type]: response.data
           };
-          
+
           // 修复活跃占比计算：使用实际获取到的节点数量作为分母
           const newActiveRatios = {
             entry: (newDetails.entry.filter((n) => n.status === 'up').length / newDetails.entry.length) * 100,
@@ -280,7 +280,7 @@ const TorNodeVisualization = () => {
             exit: (newDetails.exit.filter((n) => n.status === 'up').length / newDetails.exit.length) * 100,
           };
           setActiveRatios(newActiveRatios);
-          
+
           return newDetails;
         });
       }
@@ -476,12 +476,12 @@ const TorNodeVisualization = () => {
   // 初始化地图
   useEffect(() => {
     const worldMap = echarts.init(document.getElementById('nodeWorldMap')!);
-    
+
     const fetchMapData = async () => {
       try {
         const worldJson = await fetch('/geo/world.json').then(res => res.json());
         echarts.registerMap('world', worldJson);
-        
+
         // 更新地图配置
         const updateMapOption = () => {
           const colorMap = {
@@ -491,7 +491,7 @@ const TorNodeVisualization = () => {
           };
 
           const maxValue = Math.max(...geoData.map(item => item.value), 1);
-          
+
           const mapOption = {
             title: {
               text: `${categoryMap1[selectedNodeType]}节点全球分布`,
@@ -532,7 +532,7 @@ const TorNodeVisualization = () => {
               }
             ]
           };
-          
+
           worldMap.setOption(mapOption);
         };
 
@@ -551,161 +551,168 @@ const TorNodeVisualization = () => {
   }, [selectedNodeType, geoData]);
 
   return (
-    <div>
-      {/* 节点类型卡片 */}
-      <Row gutter={16} style={{ marginBottom: '20px' }}>
-        <Col span={8}>
-          <NodeCard
-            type="entry"
-            data={nodeDetails.entry}
-            showDetails={showDetails.entry}
-            pagination={pagination.entry}
-            onToggle={() => setShowDetails((prev) => ({ ...prev, entry: !prev.entry }))}
-            onPaginationChange={handlePaginationChange}
-            totalCount={nodeStats.entry}
-            activeRatio={activeRatios.entry} // 新增属性
-          />
-        </Col>
-        <Col span={8}>
-          <NodeCard
-            type="relay"
-            data={nodeDetails.relay}
-            showDetails={showDetails.relay}
-            pagination={pagination.relay}
-            onToggle={() => setShowDetails((prev) => ({ ...prev, relay: !prev.relay }))}
-            onPaginationChange={handlePaginationChange}
-            totalCount={nodeStats.relay}
-            activeRatio={activeRatios.relay} // 新增属性
-          />
-        </Col>
-        <Col span={8}>
-          <NodeCard
-            type="exit"
-            data={nodeDetails.exit}
-            showDetails={showDetails.exit}
-            pagination={pagination.exit}
-            onToggle={() => setShowDetails((prev) => ({ ...prev, exit: !prev.exit }))}
-            onPaginationChange={handlePaginationChange}
-            totalCount={nodeStats.exit}
-            activeRatio={activeRatios.exit} // 新增属性
-          />
-        </Col>
-      </Row>
+    <>
+      <div style={{position: 'fixed', top: 0, bottom: 0, right: 0, left: 0, minHeight: '100vh'}}>
+        <StarryBackground/>
+        <Layout style={{position: 'fixed', top: 0, bottom: 0, right: 0, left: 0, zIndex: -1}}>
+        </Layout>
+      </div>
+      <div>
+        {/* 节点类型卡片 */}
+        <Row gutter={16} style={{marginBottom: '20px'}}>
+          <Col span={8}>
+            <NodeCard
+              type="entry"
+              data={nodeDetails.entry}
+              showDetails={showDetails.entry}
+              pagination={pagination.entry}
+              onToggle={() => setShowDetails((prev) => ({...prev, entry: !prev.entry}))}
+              onPaginationChange={handlePaginationChange}
+              totalCount={nodeStats.entry}
+              activeRatio={activeRatios.entry} // 新增属性
+            />
+          </Col>
+          <Col span={8}>
+            <NodeCard
+              type="relay"
+              data={nodeDetails.relay}
+              showDetails={showDetails.relay}
+              pagination={pagination.relay}
+              onToggle={() => setShowDetails((prev) => ({...prev, relay: !prev.relay}))}
+              onPaginationChange={handlePaginationChange}
+              totalCount={nodeStats.relay}
+              activeRatio={activeRatios.relay} // 新增属性
+            />
+          </Col>
+          <Col span={8}>
+            <NodeCard
+              type="exit"
+              data={nodeDetails.exit}
+              showDetails={showDetails.exit}
+              pagination={pagination.exit}
+              onToggle={() => setShowDetails((prev) => ({...prev, exit: !prev.exit}))}
+              onPaginationChange={handlePaginationChange}
+              totalCount={nodeStats.exit}
+              activeRatio={activeRatios.exit} // 新增属性
+            />
+          </Col>
+        </Row>
 
-      {/* Family 知识图谱 + 含义介绍 */}
-      <Row gutter={16} style={{ marginBottom: '20px', marginTop: '20px' }}>
-        <Col span={16}>
-          <Card
-            title="Family 字段知识图谱"
-            bodyStyle={{ padding: 0 }}
-            style={{ height: '400px' }}
-          >
-            <div id="familyGraph" className="family-graph"></div>
-          </Card>
-        </Col>
-        <Col span={8}>
-          <Card title="Family 字段含义">
-            <p className="vuln-description">
-              在 Tor 网络中，family 表示多个节点属于同一个运营实体或相互信任的关系。
-              通常情况下，Tor 会避免将属于同一个 family 的节点同时用于构建同一路径，
-              以防止信息泄露或被中间人攻击。该字段可用于构建更加安全、隐私保护更强的路由。
-            </p>
-          </Card>
-        </Col>
-      </Row>
+        {/* Family 知识图谱 + 含义介绍 */}
+        <Row gutter={16} style={{marginBottom: '20px', marginTop: '20px'}}>
+          <Col span={16}>
+            <Card
+              title="Family 字段知识图谱"
+              bodyStyle={{padding: 0}}
+              style={{height: '400px'}}
+            >
+              <div id="familyGraph" className="family-graph"></div>
+            </Card>
+          </Col>
+          <Col span={8}>
+            <Card title="Family 字段含义">
+              <p className="vuln-description">
+                在 Tor 网络中，family 表示多个节点属于同一个运营实体或相互信任的关系。
+                通常情况下，Tor 会避免将属于同一个 family 的节点同时用于构建同一路径，
+                以防止信息泄露或被中间人攻击。该字段可用于构建更加安全、隐私保护更强的路由。
+              </p>
+            </Card>
+          </Col>
+        </Row>
 
-      {/* 漏洞说明 + 数据图表 */}
-      <Row gutter={16} style={{ marginBottom: '20px' }}>
-        <Col span={8}>
-          <Card title="漏洞说明" style={{ height: '350px' }}>
-            {selectedVulnerabilityDetails ? (
-              <div>
-                <p>
-                  <strong>漏洞编号：</strong>
-                  {selectedVulnerabilityDetails.vulnerability_CVE}
-                </p>
-                <p>
-                  <strong>严重程度：</strong>
-                  {selectedVulnerabilityDetails.severity}
-                </p>
-                <p>
-                  <strong>漏洞描述：</strong>
-                  {selectedVulnerabilityDetails.description}
-                </p>
-              </div>
-            ) : (
-              <p>点击柱状图中的漏洞以查看详细信息。</p>
-            )}
-          </Card>
-        </Col>
-        <Col span={16}>
-          <Card
-            title="漏洞数据统计"
-            bodyStyle={{ padding: 0 }}
-            style={{ height: '350px' }}
-          >
-            <div id="vulnChart" className="vuln-chart"></div>
-          </Card>
-        </Col>
-      </Row>
+        {/* 漏洞说明 + 数据图表 */}
+        <Row gutter={16} style={{marginBottom: '20px'}}>
+          <Col span={8}>
+            <Card title="漏洞说明" style={{height: '350px'}}>
+              {selectedVulnerabilityDetails ? (
+                <div>
+                  <p>
+                    <strong>漏洞编号：</strong>
+                    {selectedVulnerabilityDetails.vulnerability_CVE}
+                  </p>
+                  <p>
+                    <strong>严重程度：</strong>
+                    {selectedVulnerabilityDetails.severity}
+                  </p>
+                  <p>
+                    <strong>漏洞描述：</strong>
+                    {selectedVulnerabilityDetails.description}
+                  </p>
+                </div>
+              ) : (
+                <p>点击柱状图中的漏洞以查看详细信息。</p>
+              )}
+            </Card>
+          </Col>
+          <Col span={16}>
+            <Card
+              title="漏洞数据统计"
+              bodyStyle={{padding: 0}}
+              style={{height: '350px'}}
+            >
+              <div id="vulnChart" className="vuln-chart"></div>
+            </Card>
+          </Col>
+        </Row>
 
-      {/* 修改世界地图卡片标题 */}
-      <Row gutter={16} style={{ marginTop: '20px' }}>
-        <Col span={24}>
-          <Card 
-            title="节点脆弱性全球分布图" 
-            style={{ height: '100%' }}
-            loading={mapLoading}
-            extra={
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <Button 
-                  type={selectedNodeType === 'entry' ? 'primary' : 'default'}
-                  style={{ 
-                    backgroundColor: selectedNodeType === 'entry' ? '#FF6F61' : undefined,
-                    borderColor: '#FF6F61',
-                    color: selectedNodeType === 'entry' ? '#fff' : '#FF6F61',
-                    fontWeight: selectedNodeType === 'entry' ? 'bold' : 'normal',
-                    boxShadow: selectedNodeType === 'entry' ? '0 2px 0 rgba(255, 111, 97, 0.1)' : 'none',
-                  }}
-                  onClick={() => setSelectedNodeType('entry')}
-                >
-                  高脆弱性节点
-                </Button>
-                <Button 
-                  type={selectedNodeType === 'relay' ? 'primary' : 'default'}
-                  style={{ 
-                    backgroundColor: selectedNodeType === 'relay' ? '#F4D03F' : undefined,
-                    borderColor: '#F4D03F',
-                    color: selectedNodeType === 'relay' ? '#fff' : '#F4D03F',
-                    fontWeight: selectedNodeType === 'relay' ? 'bold' : 'normal',
-                    boxShadow: selectedNodeType === 'relay' ? '0 2px 0 rgba(244, 208, 63, 0.1)' : 'none',
-                  }}
-                  onClick={() => setSelectedNodeType('relay')}
-                >
-                  中脆弱性节点
-                </Button>
-                <Button 
-                  type={selectedNodeType === 'exit' ? 'primary' : 'default'}
-                  style={{ 
-                    backgroundColor: selectedNodeType === 'exit' ? '#B3E5D6' : undefined,
-                    borderColor: '#B3E5D6',
-                    color: selectedNodeType === 'exit' ? '#fff' : '#B3E5D6',
-                    fontWeight: selectedNodeType === 'exit' ? 'bold' : 'normal',
-                    boxShadow: selectedNodeType === 'exit' ? '0 2px 0 rgba(179, 229, 214, 0.1)' : 'none',
-                  }}
-                  onClick={() => setSelectedNodeType('exit')}
-                >
-                  低脆弱性节点
-                </Button>
-              </div>
-            }
-          >
-            <div id="nodeWorldMap" style={{ width: '100%', height: '500px' }}></div>
-          </Card>
-        </Col>
-      </Row>
-    </div>
-  );
-};
+        {/* 修改世界地图卡片标题 */}
+        <Row gutter={16} style={{marginTop: '20px'}}>
+          <Col span={24}>
+            <Card
+              title="节点脆弱性全球分布图"
+              style={{height: '100%'}}
+              loading={mapLoading}
+              extra={
+                <div style={{display: 'flex', gap: '12px'}}>
+                  <Button
+                    type={selectedNodeType === 'entry' ? 'primary' : 'default'}
+                    style={{
+                      backgroundColor: selectedNodeType === 'entry' ? '#FF6F61' : undefined,
+                      borderColor: '#FF6F61',
+                      color: selectedNodeType === 'entry' ? '#fff' : '#FF6F61',
+                      fontWeight: selectedNodeType === 'entry' ? 'bold' : 'normal',
+                      boxShadow: selectedNodeType === 'entry' ? '0 2px 0 rgba(255, 111, 97, 0.1)' : 'none',
+                    }}
+                    onClick={() => setSelectedNodeType('entry')}
+                  >
+                    高脆弱性节点
+                  </Button>
+                  <Button
+                    type={selectedNodeType === 'relay' ? 'primary' : 'default'}
+                    style={{
+                      backgroundColor: selectedNodeType === 'relay' ? '#F4D03F' : undefined,
+                      borderColor: '#F4D03F',
+                      color: selectedNodeType === 'relay' ? '#fff' : '#F4D03F',
+                      fontWeight: selectedNodeType === 'relay' ? 'bold' : 'normal',
+                      boxShadow: selectedNodeType === 'relay' ? '0 2px 0 rgba(244, 208, 63, 0.1)' : 'none',
+                    }}
+                    onClick={() => setSelectedNodeType('relay')}
+                  >
+                    中脆弱性节点
+                  </Button>
+                  <Button
+                    type={selectedNodeType === 'exit' ? 'primary' : 'default'}
+                    style={{
+                      backgroundColor: selectedNodeType === 'exit' ? '#B3E5D6' : undefined,
+                      borderColor: '#B3E5D6',
+                      color: selectedNodeType === 'exit' ? '#fff' : '#B3E5D6',
+                      fontWeight: selectedNodeType === 'exit' ? 'bold' : 'normal',
+                      boxShadow: selectedNodeType === 'exit' ? '0 2px 0 rgba(179, 229, 214, 0.1)' : 'none',
+                    }}
+                    onClick={() => setSelectedNodeType('exit')}
+                  >
+                    低脆弱性节点
+                  </Button>
+                </div>
+              }
+            >
+              <div id="nodeWorldMap" style={{width: '100%', height: '500px'}}></div>
+            </Card>
+          </Col>
+        </Row>
+      </div>
+      </>
+      );
+      };
 
-export default TorNodeVisualization;
+      export default TorNodeVisualization;
