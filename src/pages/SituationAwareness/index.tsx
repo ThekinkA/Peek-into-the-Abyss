@@ -8,6 +8,8 @@ import { useRequest } from 'umi';
 import './style.less';
 // import axios from 'axios'; // 确保安装 axios: npm install axios
 import { io } from 'socket.io-client';
+import { Layout } from 'antd'
+import StarryBackground from '@/components/Background'
 
 const SituationAwareness: React.FC = () => {
   const globeRef = useRef<any>();
@@ -234,6 +236,13 @@ const SituationAwareness: React.FC = () => {
   return (
     <>
       {/* 添加顶部说明和按钮 */}
+
+      <div style={{position: 'fixed',top:0,bottom:0,right:0,left:0, minHeight: '100vh'}}>
+        <StarryBackground/>
+        <Layout style={{position: 'fixed',top:0,bottom:0,right:0,left:0, zIndex: -1}}>
+        </Layout>
+      </div>
+
       <div
         style={{
           display: 'flex',
@@ -249,10 +258,10 @@ const SituationAwareness: React.FC = () => {
           paddingLeft: '20px',
         }}
       >
-        <div style={{ fontSize: '16px', fontWeight: 'bold' }}>
+        <div style={{fontSize: '16px', fontWeight: 'bold'}}>
           本项目自动追踪最新Tor官网信息，预计每两小时自动更新数据
         </div>
-        <div style={{ fontSize: '14px', color: '#FFD700', textAlign: 'center' }}>
+        <div style={{fontSize: '14px', color: '#FFD700', textAlign: 'center'}}>
           {latestLog || '暂无日志信息'}
         </div>
         <Button type="primary" onClick={handleManualUpdate}>
@@ -275,7 +284,7 @@ const SituationAwareness: React.FC = () => {
         />
       )}
 
-      <div style={{ padding: '20px' }}>
+      <div style={{padding: '20px'}}>
         <Row gutter={[50, 50]}>
           <Col span={14}>
             <Card
@@ -349,9 +358,9 @@ const SituationAwareness: React.FC = () => {
               <Col span={24}>
                 <Card
                   title="最新的 6 个 Tor 节点数量变化"
-                  bodyStyle={{ padding: '10px', background: '#070707' }}
+                  bodyStyle={{padding: '10px', background: '#070707'}}
                 >
-                  <ReactECharts option={columnChartOption} />
+                  <ReactECharts option={columnChartOption}/>
                 </Card>
               </Col>
 
@@ -369,7 +378,7 @@ const SituationAwareness: React.FC = () => {
                     <Popover
                       key={index}
                       content={
-                        <div style={{ maxWidth: '300px' }}>
+                        <div style={{maxWidth: '300px'}}>
                           <h4>{news.title}</h4>
                           <p>{news.content}</p>
                         </div>
@@ -378,7 +387,7 @@ const SituationAwareness: React.FC = () => {
                       trigger="click"
                       open={openPopoverIndex === index}
                       onOpenChange={(visible) => setOpenPopoverIndex(visible ? index : null)}
-                      overlayStyle={{ zIndex: 999 }}
+                      overlayStyle={{zIndex: 999}}
                     >
                       <div
                         onClick={(e) => {
@@ -394,9 +403,9 @@ const SituationAwareness: React.FC = () => {
                           borderRadius: '4px',
                         }}
                       >
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <div style={{display: 'flex', justifyContent: 'space-between'}}>
                           <span>{news.title}</span>
-                          <span style={{ color: '#aaa' }}>{news.date}</span>
+                          <span style={{color: '#aaa'}}>{news.date}</span>
                         </div>
                       </div>
                     </Popover>
@@ -408,18 +417,18 @@ const SituationAwareness: React.FC = () => {
           </Col>
         </Row>
       </div>
-      <div style={{ padding: '20px' }}>
+      <div style={{padding: '20px'}}>
         <Row gutter={[50, 50]}>
           <Col span={14}>
-            <Card title="实时任务展示" bodyStyle={{ background: '#1c1c1c', color: '#fff' }}>
+            <Card title="实时任务展示" bodyStyle={{background: '#1c1c1c', color: '#fff'}}>
               {[
-                { label: '已获取 Tor 节点', percent: 100 },
-                { label: 'Tor 节点扫描进度', percent: scanProgress }, // 使用状态值
-                { label: '已处理 Tor 节点', percent: processedProgress }, // 使用状态值
+                {label: '已获取 Tor 节点', percent: 100},
+                {label: 'Tor 节点扫描进度', percent: scanProgress}, // 使用状态值
+                {label: '已处理 Tor 节点', percent: processedProgress}, // 使用状态值
               ].map((item, index) => (
-                <div key={index} style={{ marginBottom: '16px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
-                    <div style={{ marginRight: 10, color: '#FCDA8C' }}>{item.label}</div>
+                <div key={index} style={{marginBottom: '16px'}}>
+                  <div style={{display: 'flex', alignItems: 'center', marginBottom: 8}}>
+                    <div style={{marginRight: 10, color: '#FCDA8C'}}>{item.label}</div>
                     <div
                       style={{
                         width: 12,
@@ -433,8 +442,8 @@ const SituationAwareness: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <div style={{ color: '#aaa' }}>{item.percent}%</div>
-                    <div style={{ background: '#333', borderRadius: 4, overflow: 'hidden' }}>
+                    <div style={{color: '#aaa'}}>{item.percent}%</div>
+                    <div style={{background: '#333', borderRadius: 4, overflow: 'hidden'}}>
                       <div
                         style={{
                           width: `${item.percent}%`,
@@ -454,10 +463,10 @@ const SituationAwareness: React.FC = () => {
           <Col span={8}>
             <Card
               title="新增已检测 IP 展示"
-              bodyStyle={{ background: '#070707', color: '#fff', height: '270px' }}
+              bodyStyle={{background: '#070707', color: '#fff', height: '270px'}}
               loading={latestIPsLoading}
             >
-              <TransitionGroup style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <TransitionGroup style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
                 {displayedIPs.map((ip) => (
                   <CSSTransition key={ip} timeout={500} classNames="fade-item">
                     <div className="ip-item" style={{
@@ -475,8 +484,8 @@ const SituationAwareness: React.FC = () => {
           </Col>
         </Row>
       </div>
-      <div style={{ padding: '20px', maxWidth: '91.5%' }}>
-        <Card title="节点脆弱性情况" bodyStyle={{ background: '#1c1c1c', color: '#fff' }}>
+      <div style={{padding: '20px', maxWidth: '91.5%'}}>
+        <Card title="节点脆弱性情况" bodyStyle={{background: '#1c1c1c', color: '#fff'}}>
           <Row gutter={[16, 16]}>
             {/* 高脆弱性标签 */}
             <Col span={8}>
@@ -503,7 +512,7 @@ const SituationAwareness: React.FC = () => {
                 >
                   高脆弱性节点
                 </div>
-                <span style={{ fontSize: '14px', color: '#fff' }}>70-100</span>
+                <span style={{fontSize: '14px', color: '#fff'}}>70-100</span>
               </div>
             </Col>
 
@@ -532,7 +541,7 @@ const SituationAwareness: React.FC = () => {
                 >
                   中脆弱性节点
                 </div>
-                <span style={{ fontSize: '14px', color: '#fff' }}>40-70</span>
+                <span style={{fontSize: '14px', color: '#fff'}}>40-70</span>
               </div>
             </Col>
 
@@ -561,12 +570,12 @@ const SituationAwareness: React.FC = () => {
                 >
                   低脆弱性节点
                 </div>
-                <span style={{ fontSize: '14px', color: '#fff' }}>0-40</span>
+                <span style={{fontSize: '14px', color: '#fff'}}>0-40</span>
               </div>
             </Col>
           </Row>
 
-          <Row gutter={[16, 16]} style={{ marginTop: '20px' }}>
+          <Row gutter={[16, 16]} style={{marginTop: '20px'}}>
             {/* 脆弱性占比饼状图 */}
             <Col span={12}>
               <ReactECharts
@@ -577,7 +586,7 @@ const SituationAwareness: React.FC = () => {
                   },
                   legend: {
                     bottom: 0,
-                    textStyle: { color: '#fff' },
+                    textStyle: {color: '#fff'},
                   },
                   series: [
                     {
@@ -585,9 +594,9 @@ const SituationAwareness: React.FC = () => {
                       type: 'pie',
                       radius: '50%',
                       data: [
-                        { value: 40, name: '高脆弱性', itemStyle: { color: '#FF6F61' } }, // 深红色
-                        { value: 35, name: '中脆弱性', itemStyle: { color: '#F4D03F' } }, // 深黄色
-                        { value: 25, name: '低脆弱性', itemStyle: { color: '#1ABC9C' } }, // 深绿色
+                        {value: 40, name: '高脆弱性', itemStyle: {color: '#FF6F61'}}, // 深红色
+                        {value: 35, name: '中脆弱性', itemStyle: {color: '#F4D03F'}}, // 深黄色
+                        {value: 25, name: '低脆弱性', itemStyle: {color: '#1ABC9C'}}, // 深绿色
                       ],
                       itemStyle: {
                         borderRadius: 8,
@@ -600,7 +609,7 @@ const SituationAwareness: React.FC = () => {
                     },
                   ],
                 }}
-                style={{ height: '300px' }}
+                style={{height: '300px'}}
               />
             </Col>
 
@@ -619,14 +628,14 @@ const SituationAwareness: React.FC = () => {
                   xAxis: {
                     type: 'category',
                     data: ['高', '中', '低'],
-                    splitArea: { show: true },
-                    axisLabel: { color: '#fff' },
+                    splitArea: {show: true},
+                    axisLabel: {color: '#fff'},
                   },
                   yAxis: {
                     type: 'category',
                     data: ['Day 6', 'Day 5', 'Day 4', 'Day 3', 'Day 2', 'Day 1'],
-                    splitArea: { show: true },
-                    axisLabel: { color: '#fff' },
+                    splitArea: {show: true},
+                    axisLabel: {color: '#fff'},
                   },
                   visualMap: {
                     min: 0,
@@ -635,7 +644,7 @@ const SituationAwareness: React.FC = () => {
                     orient: 'horizontal',
                     left: 'center',
                     bottom: '5%',
-                    textStyle: { color: '#fff' },
+                    textStyle: {color: '#fff'},
                   },
                   series: [
                     {
@@ -665,7 +674,7 @@ const SituationAwareness: React.FC = () => {
                     },
                   ],
                 }}
-                style={{ height: '300px' }}
+                style={{height: '300px'}}
               />
             </Col>
           </Row>
