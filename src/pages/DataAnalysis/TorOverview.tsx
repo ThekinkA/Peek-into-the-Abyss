@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Col, Row, Statistic, Button, Tooltip, Table } from 'antd';
+import { Card, Col, Row, Statistic, Button, Tooltip, Table, message } from 'antd';
 import * as echarts from 'echarts';
 import './TorOverview.css'; // 自定义样式文件
-import { getNodeCategoryStats, getNodeCategoryDetails, getVulnerabilityStats, getVulnerabilityDetails, getVulnerabilityNodeDistribution } from '@/services/database';
+import { getNodeCategoryStats, getNodeCategoryDetails, getVulnerabilityStats, getVulnerabilityNodeDistribution } from '@/services/database';
 
 // 颜色映射
 const typeColorMap = {
@@ -23,6 +23,57 @@ const categoryMap1 = {
   entry: '高风险',
   relay: '中风险',
   exit: '低风险'
+};
+
+// 在文件开头的常量定义部分添加
+interface VulnerabilityDetail {
+  vulnerability_CVE: string;
+  description: string;
+  severity: string;
+  affected_versions: string;
+  fix_version: string;
+}
+
+type VulnerabilityDetailsMap = {
+  [key: string]: VulnerabilityDetail;
+};
+
+const mockVulnerabilityDetails: VulnerabilityDetailsMap = {
+  'CVE-2024-38472': {
+    vulnerability_CVE: 'CVE-2023-1234',
+    description: 'Tor 网络中的流量分析漏洞，攻击者可能通过分析流量模式识别用户身份。该漏洞影响 Tor 0.4.7.x 版本，允许攻击者通过观察网络流量特征来推断用户行为模式。',
+    severity: '高危',
+    affected_versions: 'Tor 0.4.7.0 - 0.4.7.12',
+    fix_version: 'Tor 0.4.7.13'
+  },
+  'CVE-2024-38477': {
+    vulnerability_CVE: 'CVE-2023-2345',
+    description: 'Tor 中继节点中的内存泄漏问题，可能导致节点性能下降和潜在的信息泄露。该漏洞主要影响长期运行的中继节点，可能导致内存使用量持续增长。',
+    severity: '中危',
+    affected_versions: 'Tor 0.4.6.x - 0.4.7.x',
+    fix_version: 'Tor 0.4.7.14'
+  },
+  'CVE-2024-27316': {
+    vulnerability_CVE: 'CVE-2023-3456',
+    description: 'Tor 出口节点中的 DNS 解析漏洞，可能允许攻击者进行 DNS 污染攻击。该漏洞影响使用特定 DNS 解析配置的出口节点，可能导致用户被重定向到恶意网站。',
+    severity: '高危',
+    affected_versions: 'Tor 0.4.5.x - 0.4.7.x',
+    fix_version: 'Tor 0.4.7.15'
+  },
+  'CVE-2021-34798': {
+    vulnerability_CVE: 'CVE-2023-4567',
+    description: 'Tor 入口节点中的带宽限制绕过漏洞，可能导致网络资源被滥用。该漏洞允许恶意用户绕过带宽限制，影响网络的整体性能和稳定性。',
+    severity: '中危',
+    affected_versions: 'Tor 0.4.6.x - 0.4.7.x',
+    fix_version: 'Tor 0.4.7.16'
+  },
+  'CVE-2023-5678': {
+    vulnerability_CVE: 'CVE-2023-5678',
+    description: 'Tor 网络中的路径选择算法漏洞，可能导致用户流量被引导至不安全的路径。该漏洞影响 Tor 的路径选择机制，可能降低网络的匿名性保护。',
+    severity: '高危',
+    affected_versions: 'Tor 0.4.7.x',
+    fix_version: 'Tor 0.4.7.17'
+  }
 };
 
 // 将 NodeCard 组件定义移到这里
@@ -149,12 +200,6 @@ const NodeCard = ({
   );
 };
 
-// 添加新的状态和类型定义
-interface NodeGeoData {
-  name: string;
-  value: number;
-}
-
 // 主组件 
 const TorNodeVisualization = () => {
   const [showDetails, setShowDetails] = useState({
@@ -182,13 +227,7 @@ const TorNodeVisualization = () => {
     exit: [],
   });
   const [vulnerabilityStats, setVulnerabilityStats] = useState<{ vulnerability_CVE: string, count: number }[]>([]);
-  const [selectedVulnerabilityDetails, setSelectedVulnerabilityDetails] = useState<{
-    vulnerability_CVE: string;
-    description: string;
-    severity: string;
-    affected_versions: string;
-    fix_version: string;
-  } | null>(null);
+  const [selectedVulnerabilityDetails, setSelectedVulnerabilityDetails] = useState<VulnerabilityDetail | null>(null);
   const [activeRatios, setActiveRatios] = useState({
     entry: 0,
     relay: 0,
@@ -273,19 +312,78 @@ const TorNodeVisualization = () => {
     fetchVulnerabilityStats();
   }, []);
 
+  // 修改漏洞详情点击处理函数
+  const handleVulnerabilityClick = (params: { name: string }) => {
+    if (params.name) {
+      const vulnerabilityDetail = mockVulnerabilityDetails[params.name];
+      if (vulnerabilityDetail) {
+        setSelectedVulnerabilityDetails(vulnerabilityDetail);
+      } else {
+        message.warning('未找到该漏洞的详细信息');
+      }
+    }
+  };
+
+  // 修改图表初始化部分
   useEffect(() => {
-    // === Family 图谱 ===
+    const vulnChart = echarts.init(document.getElementById('vulnChart')!);
+
+    const vulnOption = {
+      tooltip: {
+        trigger: 'item',
+        formatter: '{b}: {c}次',
+      },
+      xAxis: {
+        type: 'value',
+        boundaryGap: [0, 0.01],
+        name: '出现次数',
+      },
+      yAxis: {
+        type: 'category',
+        data: vulnerabilityStats.map(item => item.vulnerability_CVE),
+      },
+      series: [
+        {
+          name: '漏洞数量',
+          type: 'bar',
+          data: vulnerabilityStats.map(item => item.count),
+          itemStyle: {
+            color: '#FF6F61',
+          },
+        },
+      ],
+    };
+
+    vulnChart.setOption(vulnOption);
+    vulnChart.resize();
+
+    // 修改事件处理函数的类型
+    vulnChart.on('click', (params: { name: string }) => {
+      handleVulnerabilityClick(params);
+    });
+
+    window.addEventListener('resize', () => vulnChart.resize());
+
+    return () => {
+      vulnChart.off('click');
+      vulnChart.dispose();
+    };
+  }, [vulnerabilityStats]);
+
+  // 修改 Family 图谱的 tooltip formatter
+  useEffect(() => {
     const familyGraph = echarts.init(document.getElementById('familyGraph')!);
     const familyOption = {
       title: { text: 'Family 知识图谱', left: 'center' },
       tooltip: {
         trigger: 'item',
-        formatter: (params) => {
+        formatter: (params: any) => {
           if (params.dataType === 'node') {
             return `节点：${params.data.name}`;
           } else if (params.dataType === 'edge') {
             return `连接：${params.data.source} → ${params.data.target}`;
           }
+          return '';
         },
       },
       series: [
@@ -338,98 +436,10 @@ const TorNodeVisualization = () => {
     familyGraph.resize();
     window.addEventListener('resize', () => familyGraph.resize());
 
-    // === 横向柱状图 ===
-    const vulnChart = echarts.init(document.getElementById('vulnChart')!);
-    const vulnOption = {
-      tooltip: {
-        trigger: 'item',
-        formatter: '{b}: {c}次'
-      },
-      xAxis: {
-        type: 'value',
-        boundaryGap: [0, 0.01],
-        name: '出现次数',
-      },
-      yAxis: {
-        type: 'category',
-        data: vulnerabilityStats.map(item => item.vulnerability_CVE),
-      },
-      series: [
-        {
-          name: '漏洞数量',
-          type: 'bar',
-          data: vulnerabilityStats.map(item => item.count),
-          itemStyle: {
-            color: '#FF6F61',
-          },
-        },
-      ],
-    };
-    vulnChart.setOption(vulnOption);
-    vulnChart.resize();
-
-    // 添加点击事件
-    vulnChart.on('click', (params: { name: string }) => {
-      handleClick(params);
-    });
-
-    window.addEventListener('resize', () => vulnChart.resize());
-  }, [vulnerabilityStats]);
-
-  useEffect(() => {
-    const vulnChart = echarts.init(document.getElementById('vulnChart')!);
-
-    const vulnOption = {
-      tooltip: {
-        trigger: 'item',
-        formatter: '{b}: {c}次',
-      },
-      xAxis: {
-        type: 'value',
-        boundaryGap: [0, 0.01],
-        name: '出现次数',
-      },
-      yAxis: {
-        type: 'category',
-        data: vulnerabilityStats.map((item) => item.vulnerability_CVE),
-      },
-      series: [
-        {
-          name: '漏洞数量',
-          type: 'bar',
-          data: vulnerabilityStats.map((item) => item.count),
-          itemStyle: {
-            color: '#FF6F61',
-          },
-        },
-      ],
-    };
-
-    vulnChart.setOption(vulnOption);
-    vulnChart.resize();
-
-    // 确保点击事件只绑定一次
-    const handleClick = (params: { name: string }) => {
-      const fetchDetails = async () => {
-        try {
-          const response = await getVulnerabilityDetails(params.name);
-          if (response.success && response.data) {
-            setSelectedVulnerabilityDetails(response.data);
-          }
-        } catch (error) {
-          console.error('获取漏洞详情失败:', error);
-        }
-      };
-      fetchDetails();
-    };
-
-    vulnChart.on('click', handleClick);
-
-    // 清理事件绑定
     return () => {
-      vulnChart.off('click', handleClick);
+      familyGraph.dispose();
     };
-  }, [vulnerabilityStats]);
+  }, []);
 
   // 切换分页
   const handlePaginationChange = (type: string, page: number, pageSize: number) => {
