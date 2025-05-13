@@ -17,6 +17,8 @@ import {
   DesktopOutlined,
 } from '@ant-design/icons';
 import './Details.css';
+import { Layout } from 'antd'
+import StarryBackground from '@/components/Background'
 
 const ipInfoCards = [
   {
@@ -76,7 +78,7 @@ const Details: React.FC = () => {
   const location = useLocation();
   const query = new URLSearchParams(location.search);
   const urlIp = query.get('ip');
-  
+
   const [nodeDetails, setNodeDetails] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [portData, setPortData] = useState<any[]>([]);
@@ -94,7 +96,7 @@ const Details: React.FC = () => {
           // 如果URL中提供了IP，则使用该IP；否则使用第一个IP
           const ipToUse = urlIp || response.data[0].IP;
           setSelectedIp(ipToUse);
-          
+
           const details = response.data.find((node: any) => node.IP === ipToUse);
           if (details) {
             setNodeDetails(details);
@@ -120,7 +122,7 @@ const Details: React.FC = () => {
   useEffect(() => {
     const fetchPortInfo = async () => {
       if (!selectedIp) return;
-      
+
       try {
         const response = await getPortInfo(selectedIp);
         if (response.success && response.data) {
@@ -192,59 +194,66 @@ const Details: React.FC = () => {
   ];
 
   return (
-    <div style={{ width: '80%', marginLeft: '5%' }}>
-      <Row gutter={[30, 30]}>
-        {detailsCards.map((item, index) => {
-          const isExpanded = expandedIndex === index;
-          const canExpand = overflowed[index];
+    <>
+      <div style={{position: 'fixed', top: 0, bottom: 0, right: 0, left: 0, minHeight: '100vh'}}>
+        <StarryBackground/>
+        <Layout style={{position: 'fixed', top: 0, bottom: 0, right: 0, left: 0, zIndex: -1}}>
+        </Layout>
+      </div>
+      <div style={{width: '80%', marginLeft: '5%'}}>
+        <Row gutter={[30, 30]}>
+          {detailsCards.map((item, index) => {
+            const isExpanded = expandedIndex === index;
+            const canExpand = overflowed[index];
 
-          return (
-            <Col span={item.fullRow ? 24 : 8} key={index}>
-              <Card
-                hoverable={canExpand}
-                onClick={() => canExpand && toggleExpand(index)}
-                style={{
-                  borderRadius: '10px',
-                  cursor: canExpand ? 'pointer' : 'default',
-                  transition: 'all 0.3s ease',
-                }}
-                bodyStyle={{
-                  padding: '20px 24px',
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
-              >
-                <div style={{ fontSize: '30px', marginRight: '16px' }}>{item.icon}</div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '16px', color: '#888' }}>{item.title}</div>
-                  <div
-                    ref={(el) => (textRefs.current[index] = el)}
-                    style={{
-                      fontSize: '20px',
-                      fontWeight: 600,
-                      whiteSpace: isExpanded ? 'normal' : 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      transition: 'all 0.3s ease',
-                      maxHeight: isExpanded ? '500px' : '26px',
-                    }}
-                  >
-                    {item.value}
+            return (
+              <Col span={item.fullRow ? 24 : 8} key={index}>
+                <Card
+                  hoverable={canExpand}
+                  onClick={() => canExpand && toggleExpand(index)}
+                  style={{
+                    borderRadius: '10px',
+                    cursor: canExpand ? 'pointer' : 'default',
+                    transition: 'all 0.3s ease',
+                  }}
+                  bodyStyle={{
+                    padding: '20px 24px',
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}
+                >
+                  <div style={{fontSize: '30px', marginRight: '16px'}}>{item.icon}</div>
+                  <div style={{flex: 1, minWidth: 0}}>
+                    <div style={{fontSize: '16px', color: '#888'}}>{item.title}</div>
+                    <div
+                      ref={(el) => (textRefs.current[index] = el)}
+                      style={{
+                        fontSize: '20px',
+                        fontWeight: 600,
+                        whiteSpace: isExpanded ? 'normal' : 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        transition: 'all 0.3s ease',
+                        maxHeight: isExpanded ? '500px' : '26px',
+                      }}
+                    >
+                      {item.value}
+                    </div>
                   </div>
-                </div>
-              </Card>
-            </Col>
-          );
-        })}
+                </Card>
+              </Col>
+            );
+          })}
 
-        <Col span={24}>
-          <Card title={`端口信息 (IP: ${selectedIp || '未知'})`} bordered={false}>
-            <Table dataSource={portData} columns={columns} pagination={false} bordered />
-          </Card>
-        </Col>
-      </Row>
-    </div>
-  );
-};
+          <Col span={24}>
+            <Card title={`端口信息 (IP: ${selectedIp || '未知'})`} bordered={false}>
+              <Table dataSource={portData} columns={columns} pagination={false} bordered/>
+            </Card>
+          </Col>
+        </Row>
+      </div>
+      </>
+      );
+      };
 
-export default Details;
+      export default Details;

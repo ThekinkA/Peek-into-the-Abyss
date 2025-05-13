@@ -7,6 +7,8 @@ import './AttackPath.less';
 import { useNavigate } from 'react-router-dom';
 import { RightOutlined } from '@ant-design/icons';
 import { getCClassAliveData, getDefaultCClassAliveData, CClassAliveData } from '@/services/database';
+import { Layout } from 'antd'
+import StarryBackground from '@/components/Background'
 
 const { Search } = Input;
 
@@ -49,7 +51,7 @@ const VulnerabilityInfo: React.FC = () => {
                         group: "community", // 节点颜色分组
                         size: 50, // 统一节点大小
                         font: { size: 14, color: "#000000" }, // 节点字体配置
-                        title_properties: ["ip", "ipid", "节点标识符"] 
+                        title_properties: ["ip", "ipid", "节点标识符"]
                     },
                 //     "带宽估计值": {
                 // label: "带宽估计值", // 显示节点的 `带宽估计值` 属性
@@ -267,7 +269,7 @@ const VulnerabilityInfo: React.FC = () => {
                 },
                 initialCypher: `MATCH (n)-[r]->(m) WHERE n.节点标识符 = '${targetIp}' RETURN n, r, m` // 动态查询语句
             };
-            
+
 
             vizInstance.current = new NeoVis(config);
             vizInstance.current.render();
@@ -279,7 +281,7 @@ const VulnerabilityInfo: React.FC = () => {
             });
         }
     }, [targetIp]); // 监听 targetIp 的变化
-    
+
     function displayNodeProperties(node) {
         // 打印完整的节点数据
         console.log("Node data:", node);
@@ -507,178 +509,194 @@ const VulnerabilityInfo: React.FC = () => {
     }, []);
 
     return (
-        <div className="vulnerability-container">
-            {/* 第一行：目标IP + 搜索功能 */}
-            <Row align="middle" style={{ marginBottom: '20px' }}>
-                <Col span={12}>
-                    <div className="target-ip">
-                        当前目标IP: <Tag color="red">{targetIp}</Tag>
-                    </div>
-                </Col>
-                <Col span={12} style={{ textAlign: 'right' }}>
-                    <Search
-                        placeholder="请输入IP地址"
-                        enterButton="搜索"
-                        size="middle"
-                        onSearch={handleSearch}
-                        style={{ maxWidth: '300px' }}
-                    />
-                </Col>
-            </Row>
-
-            {/* 第三行：Neo4j + 曲线 */}
-            <Row gutter={24} style={{ marginBottom: '30px' }}>
-                <Col span={20}>
-                    <div
-                        id="viz"
-                        ref={vizRef}
-                        style={{
-                            height: '600px',
-                            background: '#0d1117',
-                            borderRadius: '12px',
-                            padding: '10px',
-                        }}
-                    ></div>
-                </Col>
-                <Col span={4}>
-                    <div className="curve-container" style={{ height: '600px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-around', background: 'linear-gradient(to top, #8B0000, #FF0000)', borderRadius: '12px', padding: '10px' }}>
-                        {recentIps.map((ip) => (
-                            <div
-                                key={ip}
-                                onClick={() => handlePointClick(ip)}
-                                style={{
-                                    width: '20px',
-                                    height: '20px',
-                                    borderRadius: '50%',
-                                    background: '#fff',
-                                    border: '2px solid #000',
-                                    cursor: 'pointer',
-                                    animation: 'pulse 1.5s infinite',
-                                    position: 'relative'
-                                }}
-                                title={`C段IP: ${ip}`}
-                            >
-                                <div style={{
-                                    position: 'absolute',
-                                    top: '25px',
-                                    left: '50%',
-                                    transform: 'translateX(-50%)',
-                                    whiteSpace: 'nowrap',
-                                    fontSize: '12px',
-                                    color: '#fff',
-                                    textShadow: '0 0 2px #000'
-                                }}>
-                                    {ip}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </Col>
-            </Row>
-
-            {/* 第四行：漏洞信息展示 */}
-            <Row>
-                <Col>
-                    <Space>
-                        {/* 开始脆弱性评估按钮 */}
-                        <Button
-                            type="primary"
-                            onClick={handleRunVul}
-                            loading={loading}
-                            style={{ width: '150px' }}
-                        >
-                            {loading ? '正在加载...' : '开始脆弱性评估'}
-                        </Button>
-
-                        {/* 新增展示评估结果按钮 */}
-                        <Button
-                            type="default"
-                            onClick={handleShow} // 点击时直接显示组件
-                            style={{ width: '150px' }}
-                        >
-                            展示评估结果
-                        </Button>
-                    </Space>
-                </Col>
-            </Row>
-
-            {/* 显示评估结果的组件 */}
-            <Row>
-                <Col span={10}>
-                    <CSSTransition in={show} timeout={300} classNames="fade" unmountOnExit>
-                        <div className="vulnerability-content">
-                            <div className="data-group">
-                                <h3>CVE 编号</h3>
-                                <div className="data-list" style={{ gridTemplateColumns: '1fr 1fr' }}>
-                                    <div className="scroll-container">
-                                        {cveData1.map((item, index) => (
-                                            <Card
-                                                key={item}
-                                                className="data-card"
-                                                hoverable
-                                                onClick={() => handleDetail(item, dkvData1[index])}
-                                            >
-                                                <Tag color="#108ee9">{item}</Tag>
-                                            </Card>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="data-group">
-                                <h3>DKV 编号</h3>
-                                <div className="data-list">
-                                    <div className="scroll-container">
-                                        {dkvData1.map((item, index) => (
-                                            <Card
-                                                key={item}
-                                                className="data-card"
-                                                hoverable
-                                                onClick={() => handleDetail(cveData1[index], item)}
-                                            >
-                                                <Tag color="#87d068">{item}</Tag>
-                                            </Card>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </CSSTransition>
-                </Col>
-                <Col span={14}>
-                    <div id="bar-chart" style={{ height: '400px', width: '100%' }}></div>
-                </Col>
-            </Row>
-
-            {canJump && (
-                <div style={{ marginTop: '40px', textAlign: 'center' }}>
-                    <Button
-                        type="primary"
-                        icon={<RightOutlined />}
-                        onClick={() => {
-                            navigate('/control-system/result-analysis', { state: { ip: targetIp } });
-                            handleRunAttack(); // 跳转后运行 handleRunAttack 函数
-                        }}
-                    >
-                        可进行攻击路径推理
-                    </Button>
-                </div>
-            )}
-
-            {/* 漏洞详细信息弹窗 */}
-            {detailData && (
-                <Modal
-                    title="漏洞详细信息"
-                    visible={!!detailData}
-                    onCancel={handleCancel}
-                    footer={null}
-                >
-                    <p><strong>CVE 编号：</strong>{detailData.cve}</p>
-                    <p><strong>DKV 编号：</strong>{detailData.dkv}</p>
-                    <p><strong>漏洞描述：</strong>这是一个示例漏洞，具体描述内容可根据实际数据填充。</p>
-                </Modal>
-            )}
+      <>
+        <div style={{position: 'fixed', top: 0, bottom: 0, right: 0, left: 0, minHeight: '100vh'}}>
+          <StarryBackground/>
+          <Layout style={{position: 'fixed', top: 0, bottom: 0, right: 0, left: 0, zIndex: -1}}>
+          </Layout>
         </div>
-    );
-};
+        <div className="vulnerability-container">
+          {/* 第一行：目标IP + 搜索功能 */}
+          <Row align="middle" style={{marginBottom: '20px'}}>
+            <Col span={12}>
+              <div className="target-ip">
+                当前目标IP: <Tag color="red">{targetIp}</Tag>
+              </div>
+            </Col>
+            <Col span={12} style={{textAlign: 'right'}}>
+              <Search
+                placeholder="请输入IP地址"
+                enterButton="搜索"
+                size="middle"
+                onSearch={handleSearch}
+                style={{maxWidth: '300px'}}
+              />
+            </Col>
+          </Row>
 
-export default VulnerabilityInfo;
+          {/* 第三行：Neo4j + 曲线 */}
+          <Row gutter={24} style={{marginBottom: '30px'}}>
+            <Col span={20}>
+              <div
+                id="viz"
+                ref={vizRef}
+                style={{
+                  height: '600px',
+                  background: '#0d1117',
+                  borderRadius: '12px',
+                  padding: '10px',
+                }}
+              ></div>
+            </Col>
+            <Col span={4}>
+              <div className="curve-container" style={{
+                height: '600px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'space-around',
+                background: 'linear-gradient(to top, #8B0000, #FF0000)',
+                borderRadius: '12px',
+                padding: '10px'
+              }}>
+                {recentIps.map((ip) => (
+                  <div
+                    key={ip}
+                    onClick={() => handlePointClick(ip)}
+                    style={{
+                      width: '20px',
+                      height: '20px',
+                      borderRadius: '50%',
+                      background: '#fff',
+                      border: '2px solid #000',
+                      cursor: 'pointer',
+                      animation: 'pulse 1.5s infinite',
+                      position: 'relative'
+                    }}
+                    title={`C段IP: ${ip}`}
+                  >
+                    <div style={{
+                      position: 'absolute',
+                      top: '25px',
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      whiteSpace: 'nowrap',
+                      fontSize: '12px',
+                      color: '#fff',
+                      textShadow: '0 0 2px #000'
+                    }}>
+                      {ip}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Col>
+          </Row>
+
+          {/* 第四行：漏洞信息展示 */}
+          <Row>
+            <Col>
+              <Space>
+                {/* 开始脆弱性评估按钮 */}
+                <Button
+                  type="primary"
+                  onClick={handleRunVul}
+                  loading={loading}
+                  style={{width: '150px'}}
+                >
+                  {loading ? '正在加载...' : '开始脆弱性评估'}
+                </Button>
+
+                {/* 新增展示评估结果按钮 */}
+                <Button
+                  type="default"
+                  onClick={handleShow} // 点击时直接显示组件
+                  style={{width: '150px'}}
+                >
+                  展示评估结果
+                </Button>
+              </Space>
+            </Col>
+          </Row>
+
+          {/* 显示评估结果的组件 */}
+          <Row>
+            <Col span={10}>
+              <CSSTransition in={show} timeout={300} classNames="fade" unmountOnExit>
+                <div className="vulnerability-content">
+                  <div className="data-group">
+                    <h3>CVE 编号</h3>
+                    <div className="data-list" style={{gridTemplateColumns: '1fr 1fr'}}>
+                      <div className="scroll-container">
+                        {cveData1.map((item, index) => (
+                          <Card
+                            key={item}
+                            className="data-card"
+                            hoverable
+                            onClick={() => handleDetail(item, dkvData1[index])}
+                          >
+                            <Tag color="#108ee9">{item}</Tag>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="data-group">
+                    <h3>DKV 编号</h3>
+                    <div className="data-list">
+                      <div className="scroll-container">
+                        {dkvData1.map((item, index) => (
+                          <Card
+                            key={item}
+                            className="data-card"
+                            hoverable
+                            onClick={() => handleDetail(cveData1[index], item)}
+                          >
+                            <Tag color="#87d068">{item}</Tag>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CSSTransition>
+            </Col>
+            <Col span={14}>
+              <div id="bar-chart" style={{height: '400px', width: '100%'}}></div>
+            </Col>
+          </Row>
+
+          {canJump && (
+            <div style={{marginTop: '40px', textAlign: 'center'}}>
+              <Button
+                type="primary"
+                icon={<RightOutlined/>}
+                onClick={() => {
+                  navigate('/control-system/result-analysis', {state: {ip: targetIp}});
+                  handleRunAttack(); // 跳转后运行 handleRunAttack 函数
+                }}
+              >
+                可进行攻击路径推理
+              </Button>
+            </div>
+          )}
+
+          {/* 漏洞详细信息弹窗 */}
+          {detailData && (
+            <Modal
+              title="漏洞详细信息"
+              visible={!!detailData}
+              onCancel={handleCancel}
+              footer={null}
+            >
+              <p><strong>CVE 编号：</strong>{detailData.cve}</p>
+              <p><strong>DKV 编号：</strong>{detailData.dkv}</p>
+              <p><strong>漏洞描述：</strong>这是一个示例漏洞，具体描述内容可根据实际数据填充。</p>
+            </Modal>
+          )}
+        </div>
+        </>
+        );
+        };
+
+        export default VulnerabilityInfo;

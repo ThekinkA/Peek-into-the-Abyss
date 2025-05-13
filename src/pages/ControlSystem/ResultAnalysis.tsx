@@ -5,6 +5,8 @@ import { ArrowRightOutlined } from '@ant-design/icons';
 import { CSSTransition } from 'react-transition-group';
 import * as echarts from 'echarts';
 import './ResultAnalysis.less';
+import { Layout } from 'antd'
+import StarryBackground from '@/components/Background'
 
 const steps = [
   '输入文件传入到 MulVAL',
@@ -203,148 +205,155 @@ const ResultAnalysis: React.FC = () => {
   }, [queryIndex]);
 
   return (
-    <div className="result-analysis-container">
-      <div style={{ marginBottom: '20px', textAlign: 'center' }}>
-        <h2 style={{ fontWeight: 'bold', color: '#333' }}>攻击路径分析</h2>
-        当前IP: <Tag color="red">{ip}</Tag>
+    <>
+      <div style={{position: 'fixed', top: 0, bottom: 0, right: 0, left: 0, minHeight: '100vh'}}>
+        <StarryBackground/>
+        <Layout style={{position: 'fixed', top: 0, bottom: 0, right: 0, left: 0, zIndex: -1}}>
+        </Layout>
       </div>
+      <div className="result-analysis-container">
+        <div style={{marginBottom: '20px', textAlign: 'center'}}>
+          <h2 style={{fontWeight: 'bold', color: '#333'}}>攻击路径分析</h2>
+          当前IP: <Tag color="red">{ip}</Tag>
+        </div>
 
-      <Row gutter={16} className="flow-container" style={{ marginBottom: '20px' }}>
-        {steps.map((step, index) => (
-          <React.Fragment key={index}>
-            <Col>
-              <Card
-                className={`flow-step ${index < currentStep ? 'visible' : ''}`}
-                onClick={() => handleCardClick(step)}
-                style={{
-                  textAlign: 'center',
-                  backgroundColor: index === currentStep ? '#f0f5ff' : 'rgba(204, 0, 0, 1)',
-                  border: index === currentStep ? '2px solid rgb(0, 0, 0)' : '1px solid rgb(0, 0, 0)',
-                  transition: 'all 0.3s',
-                }}
-              >
-                {step}
-              </Card>
-            </Col>
-            {index < steps.length - 1 && (
+        <Row gutter={16} className="flow-container" style={{marginBottom: '20px'}}>
+          {steps.map((step, index) => (
+            <React.Fragment key={index}>
               <Col>
-                <ArrowRightOutlined
-                  className={`flow-arrow ${index < currentStep - 1 ? 'visible' : ''}`}
-                  style={{ fontSize: '20px', color: '#1890ff' }}
-                />
+                <Card
+                  className={`flow-step ${index < currentStep ? 'visible' : ''}`}
+                  onClick={() => handleCardClick(step)}
+                  style={{
+                    textAlign: 'center',
+                    backgroundColor: index === currentStep ? '#f0f5ff' : 'rgba(204, 0, 0, 1)',
+                    border: index === currentStep ? '2px solid rgb(0, 0, 0)' : '1px solid rgb(0, 0, 0)',
+                    transition: 'all 0.3s',
+                  }}
+                >
+                  {step}
+                </Card>
               </Col>
-            )}
-          </React.Fragment>
-        ))}
-      </Row>
+              {index < steps.length - 1 && (
+                <Col>
+                  <ArrowRightOutlined
+                    className={`flow-arrow ${index < currentStep - 1 ? 'visible' : ''}`}
+                    style={{fontSize: '20px', color: '#1890ff'}}
+                  />
+                </Col>
+              )}
+            </React.Fragment>
+          ))}
+        </Row>
 
-      <CSSTransition
-        in={showBoxes}
-        timeout={500}
-        classNames="fade"
-        unmountOnExit
-        onEntered={() => {
-          if (graphData) {
-            renderGraph(); // 动画完成后渲染图
-          }
-        }}
-      >
-        <Row gutter={24} style={{ marginTop: '40px' }}>
-          <Col span={24}>
-          <Card
-              title={
-                <span style={{ fontSize: '20px', fontWeight: 'bold', color: 'white' }}>
+        <CSSTransition
+          in={showBoxes}
+          timeout={500}
+          classNames="fade"
+          unmountOnExit
+          onEntered={() => {
+            if (graphData) {
+              renderGraph(); // 动画完成后渲染图
+            }
+          }}
+        >
+          <Row gutter={24} style={{marginTop: '40px'}}>
+            <Col span={24}>
+              <Card
+                title={
+                  <span style={{fontSize: '20px', fontWeight: 'bold', color: 'white'}}>
                   {cardTitle}
                 </span>
-              }
-              style={{
-                height: '700px',
-                width: '100%',
-                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-                borderRadius: '8px',
-                position: 'relative',
-              }}
-            >
-              {pdfFile ? (
-                <iframe
-                  src={pdfFile}
-                  title="PDF Viewer"
-                  style={{ width: '100%', height: '600px', border: 'none' }}
-                ></iframe>
-              ) : noResult ? (
-                <div style={{ textAlign: 'center', color: '#ff4d4f', fontSize: '18px' }}>
-                  未查询到结果
-                </div>
-              ) : (
-                <div
-                  id="graph-container"
-                  style={{
-                    width: '100%',
-                    height: '600px',
-                    border: '1px solid #d9d9d9',
-                    borderRadius: '8px',
-                    backgroundColor: '#000',
-                  }}
-                ></div>
-              )}
-
-              {/* 左右箭头按钮 */}
-              {!pdfFile && (
-                <div style={{ position: 'absolute', bottom: '20px', right: '20px', display: 'flex', gap: '10px' }}>
-                  <button
+                }
+                style={{
+                  height: '700px',
+                  width: '100%',
+                  boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+                  borderRadius: '8px',
+                  position: 'relative',
+                }}
+              >
+                {pdfFile ? (
+                  <iframe
+                    src={pdfFile}
+                    title="PDF Viewer"
+                    style={{width: '100%', height: '600px', border: 'none'}}
+                  ></iframe>
+                ) : noResult ? (
+                  <div style={{textAlign: 'center', color: '#ff4d4f', fontSize: '18px'}}>
+                    未查询到结果
+                  </div>
+                ) : (
+                  <div
+                    id="graph-container"
                     style={{
-                      backgroundColor: '#1890ff',
-                      color: '#fff',
-                      border: 'none',
-                      borderRadius: '50%',
-                      width: '40px',
-                      height: '40px',
-                      cursor: queryIndex === 1 ? 'not-allowed' : 'pointer',
+                      width: '100%',
+                      height: '600px',
+                      border: '1px solid #d9d9d9',
+                      borderRadius: '8px',
+                      backgroundColor: '#000',
                     }}
-                    disabled={queryIndex === 1}
-                    onClick={() => {
-                      setQueryIndex((prev) => Math.max(1, prev - 1));
-                    }}
-                  >
-                    &lt;
-                  </button>
-                  <button
-                    style={{
-                      backgroundColor: '#1890ff',
-                      color: '#fff',
-                      border: 'none',
-                      borderRadius: '50%',
-                      width: '40px',
-                      height: '40px',
-                      cursor: 'pointer',
-                    }}
-                    onClick={() => {
-                      setQueryIndex((prev) => prev + 1);
-                    }}
-                  >
-                    &gt;
-                  </button>
-                </div>
-              )}
-            </Card>
-          </Col>
-          <Col span={24} style={{ marginTop: '20px' }}>
-            <Card
-              title="报告文本"
-              style={{
-                height: '300px',
-                width: '100%',
-                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-                borderRadius: '8px',
-              }}
-            >
-              <p style={{ color: '#555' }}>这里是报告文本的内容。</p>
-            </Card>
-          </Col>
-        </Row>
-      </CSSTransition>
-    </div >
-  );
-};
+                  ></div>
+                )}
 
-export default ResultAnalysis;
+                {/* 左右箭头按钮 */}
+                {!pdfFile && (
+                  <div style={{position: 'absolute', bottom: '20px', right: '20px', display: 'flex', gap: '10px'}}>
+                    <button
+                      style={{
+                        backgroundColor: '#1890ff',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '50%',
+                        width: '40px',
+                        height: '40px',
+                        cursor: queryIndex === 1 ? 'not-allowed' : 'pointer',
+                      }}
+                      disabled={queryIndex === 1}
+                      onClick={() => {
+                        setQueryIndex((prev) => Math.max(1, prev - 1));
+                      }}
+                    >
+                      &lt;
+                    </button>
+                    <button
+                      style={{
+                        backgroundColor: '#1890ff',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '50%',
+                        width: '40px',
+                        height: '40px',
+                        cursor: 'pointer',
+                      }}
+                      onClick={() => {
+                        setQueryIndex((prev) => prev + 1);
+                      }}
+                    >
+                      &gt;
+                    </button>
+                  </div>
+                )}
+              </Card>
+            </Col>
+            <Col span={24} style={{marginTop: '20px'}}>
+              <Card
+                title="报告文本"
+                style={{
+                  height: '300px',
+                  width: '100%',
+                  boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+                  borderRadius: '8px',
+                }}
+              >
+                <p style={{color: '#555'}}>这里是报告文本的内容。</p>
+              </Card>
+            </Col>
+          </Row>
+        </CSSTransition>
+      </div>
+      </>
+      );
+      };
+
+      export default ResultAnalysis;
