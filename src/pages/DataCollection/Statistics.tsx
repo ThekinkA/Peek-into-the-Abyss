@@ -11,6 +11,8 @@ import EChartComponent from '../../components/EChartComponent'; // 引入封装�
 import { getTorProfile, getLatestTime, getCClassAliveData, getDefaultCClassAliveData, getNodeStatusStats, getTopFiveCountries, getNodeAliveStats, getCountryDistribution, getLatestNodeAliveRatio } from '@/services/database';
 import './Statistics.css';
 import { history } from 'umi';
+import { Layout } from 'antd'
+import StarryBackground from '@/components/Background'
 
 interface CClassAliveData {
   id: number;
@@ -56,7 +58,7 @@ const Statistics: React.FC = () => {
 
     // 加载世界地图数据
     myChart.showLoading();
-    
+
     const fetchData = async () => {
       try {
         const [worldJson, countryData] = await Promise.all([
@@ -279,444 +281,453 @@ const Statistics: React.FC = () => {
   ];
 
   return (
-    <div>
-      {/* 上半部分：已有内容 */}
-      <Row gutter={16}>
-        <Col span={6}>
-          <div className="card">
-            <div style={{ padding: '20px', position: 'relative' }}>
-              <div className="subtitle">已检测天数</div>
-              <div className="text">16</div>
-              <CalendarOutlined
-                style={{
-                  fontSize: '40px',
-                  color: '#1890ff',
-                  position: 'absolute',
-                  bottom: '20px',
-                  right: '20px',
-                }}
-              />
-            </div>
-          </div>
-        </Col>
-        <Col span={6}>
-          <div className="card">
-            <div style={{ padding: '20px', position: 'relative' }}>
-              <div className="subtitle">已检测节点总数</div>
-              <div className="text">6,560</div>
-              <NodeIndexOutlined
-                style={{
-                  fontSize: '40px',
-                  color: '#52c41a',
-                  position: 'absolute',
-                  bottom: '20px',
-                  right: '20px',
-                }}
-              />
-            </div>
-          </div>
-        </Col>
-        <Col span={6}>
-          <div className="card">
-            <div style={{ padding: '20px', position: 'relative' }}>
-              <div className="subtitle">已检测C段IP总数</div>
-              <div className="text">126,560</div>
-              <GlobalOutlined
-                style={{
-                  fontSize: '40px',
-                  color: '#faad14',
-                  position: 'absolute',
-                  bottom: '20px',
-                  right: '20px',
-                }}
-              />
-            </div>
-          </div>
-        </Col>
-        <Col span={6}>
-          <div className="card">
-            <div style={{ padding: '20px', position: 'relative' }}>
-              <div className="subtitle">生成攻击路径总数</div>
-              <div className="text">78</div>
-              <AimOutlined
-                style={{
-                  fontSize: '40px',
-                  color: '#f5222d',
-                  position: 'absolute',
-                  bottom: '20px',
-                  right: '20px',
-                }}
-              />
-            </div>
-          </div>
-        </Col>
-      </Row>
+    <>
 
-      {/* 下半部分：折线图和表格 */}
-      <Row gutter={16} style={{ marginTop: '20px' }}>
-        <Col span={12}>
-          <Card title="Tor官网数据统计" style={{ height: '100%' }}>
-            <Row gutter={16} style={{ marginTop: '20px' }}>
-              <Col span={8}>
-                <Card title="第 54 次更新 Tor 官网数据" style={{ height: '100%' }}>
-                  <div style={{ fontSize: '16px', textAlign: 'center', padding: '20px' }}>
-                    本次更新包含最新的 Tor 节点信息。
-                  </div>
-                </Card>
-              </Col>
-              <Col span={8}>
-                <Card title="最近更新时间" style={{ height: '100%' }} loading={timeLoading}>
-                  <div style={{ fontSize: '16px', textAlign: 'center', padding: '20px' }}>
-                    {latestTime || '暂无数据'}
-                  </div>
-                </Card>
-              </Col>
-              <Col span={8}>
-                <Card title="最新节点数据" style={{ height: '100%' }}>
-                  <div style={{ fontSize: '16px', textAlign: 'center', padding: '20px' }}>
-                    共计 12,345 个节点。
-                  </div>
-                </Card>
-              </Col>
-            </Row>
-            <Table
-              columns={columns}
-              dataSource={torProfileData}
-              loading={loading}
-              pagination={{ pageSize: 5 }}
-              style={{ marginTop: '20px' }}
-              onRow={(record) => ({
-                onClick: () => handleTableRowClick1(record),
-              })}
-            />
-          </Card>
-        </Col>
+      <div style={{position: 'fixed', top: 0, bottom: 0, right: 0, left: 0, minHeight: '100vh'}}>
+        <StarryBackground/>
+        <Layout style={{position: 'fixed', top: 0, bottom: 0, right: 0, left: 0, zIndex: -1}}>
+        </Layout>
+      </div>
 
-        <Col span={12}>
-          <Card 
-            title={selectedIp ? `${selectedIp} C段存活情况` : 'C段存活情况'} 
-            style={{ height: '100%' }}
-            loading={cClassAliveLoading}
-          >
-            {cClassAliveData ? (
-              <div style={{ position: 'relative' }}>
-                {/* 饼状图 */}
-                <EChartComponent
-                  option={{
-                    tooltip: {
-                      trigger: 'item',
-                      formatter: '{a} <br/>{b}: {c} ({d}%)',
-                    },
-                    legend: {
-                      orient: 'vertical',
-                      left: 'right',
-                      data: ['存活IP', '未存活IP'],
-                    },
-                    series: [
-                      {
-                        name: 'IP数量',
-                        type: 'pie',
-                        radius: ['40%', '70%'], // 设置内外半径，形成环形图
-                        avoidLabelOverlap: false,
-                        label: {
-                          show: true,
-                          position: 'center',
-                          formatter: `IP总数\n${cClassAliveData.alive_count + cClassAliveData.dead_count}`, // 中心文本
-                          fontSize: 18,
-                          fontWeight: 'bold',
-                        },
-                        emphasis: {
+      <div>
+        {/* 上半部分：已有内容 */}
+        <Row gutter={16}>
+          <Col span={6}>
+            <div className="card">
+              <div style={{padding: '20px', position: 'relative'}}>
+                <div className="subtitle">已检测天数</div>
+                <div className="text">16</div>
+                <CalendarOutlined
+                  style={{
+                    fontSize: '40px',
+                    color: '#1890ff',
+                    position: 'absolute',
+                    bottom: '20px',
+                    right: '20px',
+                  }}
+                />
+              </div>
+            </div>
+          </Col>
+          <Col span={6}>
+            <div className="card">
+              <div style={{padding: '20px', position: 'relative'}}>
+                <div className="subtitle">已检测节点总数</div>
+                <div className="text">6,560</div>
+                <NodeIndexOutlined
+                  style={{
+                    fontSize: '40px',
+                    color: '#52c41a',
+                    position: 'absolute',
+                    bottom: '20px',
+                    right: '20px',
+                  }}
+                />
+              </div>
+            </div>
+          </Col>
+          <Col span={6}>
+            <div className="card">
+              <div style={{padding: '20px', position: 'relative'}}>
+                <div className="subtitle">已检测C段IP总数</div>
+                <div className="text">126,560</div>
+                <GlobalOutlined
+                  style={{
+                    fontSize: '40px',
+                    color: '#faad14',
+                    position: 'absolute',
+                    bottom: '20px',
+                    right: '20px',
+                  }}
+                />
+              </div>
+            </div>
+          </Col>
+          <Col span={6}>
+            <div className="card">
+              <div style={{padding: '20px', position: 'relative'}}>
+                <div className="subtitle">生成攻击路径总数</div>
+                <div className="text">78</div>
+                <AimOutlined
+                  style={{
+                    fontSize: '40px',
+                    color: '#f5222d',
+                    position: 'absolute',
+                    bottom: '20px',
+                    right: '20px',
+                  }}
+                />
+              </div>
+            </div>
+          </Col>
+        </Row>
+
+        {/* 下半部分：折线图和表格 */}
+        <Row gutter={16} style={{marginTop: '20px'}}>
+          <Col span={12}>
+            <Card title="Tor官网数据统计" style={{height: '100%'}}>
+              <Row gutter={16} style={{marginTop: '20px'}}>
+                <Col span={8}>
+                  <Card title="第 54 次更新 Tor 官网数据" style={{height: '100%'}}>
+                    <div style={{fontSize: '16px', textAlign: 'center', padding: '20px'}}>
+                      本次更新包含最新的 Tor 节点信息。
+                    </div>
+                  </Card>
+                </Col>
+                <Col span={8}>
+                  <Card title="最近更新时间" style={{height: '100%'}} loading={timeLoading}>
+                    <div style={{fontSize: '16px', textAlign: 'center', padding: '20px'}}>
+                      {latestTime || '暂无数据'}
+                    </div>
+                  </Card>
+                </Col>
+                <Col span={8}>
+                  <Card title="最新节点数据" style={{height: '100%'}}>
+                    <div style={{fontSize: '16px', textAlign: 'center', padding: '20px'}}>
+                      共计 12,345 个节点。
+                    </div>
+                  </Card>
+                </Col>
+              </Row>
+              <Table
+                columns={columns}
+                dataSource={torProfileData}
+                loading={loading}
+                pagination={{pageSize: 5}}
+                style={{marginTop: '20px'}}
+                onRow={(record) => ({
+                  onClick: () => handleTableRowClick1(record),
+                })}
+              />
+            </Card>
+          </Col>
+
+          <Col span={12}>
+            <Card
+              title={selectedIp ? `${selectedIp} C段存活情况` : 'C段存活情况'}
+              style={{height: '100%'}}
+              loading={cClassAliveLoading}
+            >
+              {cClassAliveData ? (
+                <div style={{position: 'relative'}}>
+                  {/* 饼状图 */}
+                  <EChartComponent
+                    option={{
+                      tooltip: {
+                        trigger: 'item',
+                        formatter: '{a} <br/>{b}: {c} ({d}%)',
+                      },
+                      legend: {
+                        orient: 'vertical',
+                        left: 'right',
+                        data: ['存活IP', '未存活IP'],
+                      },
+                      series: [
+                        {
+                          name: 'IP数量',
+                          type: 'pie',
+                          radius: ['40%', '70%'], // 设置内外半径，形成环形图
+                          avoidLabelOverlap: false,
                           label: {
                             show: true,
-                            fontSize: '20',
+                            position: 'center',
+                            formatter: `IP总数\n${cClassAliveData.alive_count + cClassAliveData.dead_count}`, // 中心文本
+                            fontSize: 18,
                             fontWeight: 'bold',
                           },
+                          emphasis: {
+                            label: {
+                              show: true,
+                              fontSize: '20',
+                              fontWeight: 'bold',
+                            },
+                          },
+                          labelLine: {
+                            show: false,
+                          },
+                          data: [
+                            {value: cClassAliveData.alive_count, name: '存活IP'},
+                            {value: cClassAliveData.dead_count, name: '未存活IP'},
+                          ],
                         },
-                        labelLine: {
-                          show: false,
-                        },
-                        data: [
-                          { value: cClassAliveData.alive_count, name: '存活IP' },
-                          { value: cClassAliveData.dead_count, name: '未存活IP' },
-                        ],
-                      },
-                    ],
-                  }}
-                  height="400px"
-                />
-
-                {/* 表格 */}
-                <div style={{ position: 'absolute', bottom: '0px', right: '0px', width: '30%' }}>
-                  <Table
-                    columns={[
-                      { title: 'Host', dataIndex: 'host', key: 'host' },
-                      { title: '值', dataIndex: 'value', key: 'value' }
-                    ]}
-                    dataSource={[
-                      { key: '1', host: 'Host1', value: cClassAliveData.host1 },
-                      { key: '2', host: 'Host2', value: cClassAliveData.host2 },
-                      { key: '3', host: 'Host3', value: cClassAliveData.host3 },
-                      { key: '4', host: 'Host4', value: cClassAliveData.host4 },
-                      { key: '5', host: 'Host5', value: cClassAliveData.host5 },
-                    ]}
-                    pagination={false}
-                    size="small"
+                      ],
+                    }}
+                    height="400px"
                   />
+
+                  {/* 表格 */}
+                  <div style={{position: 'absolute', bottom: '0px', right: '0px', width: '30%'}}>
+                    <Table
+                      columns={[
+                        {title: 'Host', dataIndex: 'host', key: 'host'},
+                        {title: '值', dataIndex: 'value', key: 'value'}
+                      ]}
+                      dataSource={[
+                        {key: '1', host: 'Host1', value: cClassAliveData.host1},
+                        {key: '2', host: 'Host2', value: cClassAliveData.host2},
+                        {key: '3', host: 'Host3', value: cClassAliveData.host3},
+                        {key: '4', host: 'Host4', value: cClassAliveData.host4},
+                        {key: '5', host: 'Host5', value: cClassAliveData.host5},
+                      ]}
+                      pagination={false}
+                      size="small"
+                    />
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div style={{ fontSize: '16px', textAlign: 'center', padding: '20px' }}>
-                暂无数据
-              </div>
-            )}
-          </Card>
-        </Col>
-      </Row>
+              ) : (
+                <div style={{fontSize: '16px', textAlign: 'center', padding: '20px'}}>
+                  暂无数据
+                </div>
+              )}
+            </Card>
+          </Col>
+        </Row>
 
-      <Row gutter={16} style={{ marginTop: '20px' }}>
-        {/* 折线图 */}
-        <Col span={18}>
-          <Card title="节点存活情况统计图" style={{ height: '100%' }} loading={nodeAliveStatsLoading}>
-            <EChartComponent
-              option={{
-                tooltip: {
-                  trigger: 'axis',
-                  axisPointer: {
-                    type: 'cross',
-                  },
-                  formatter: function(params: any) {
-                    let result = params[0].axisValue + '<br/>';
-                    params.forEach((param: any) => {
-                      result += param.marker + ' ' + param.seriesName + ': ' + param.value + ' 个节点<br/>';
-                    });
-                    return result;
-                  }
-                },
-                legend: {
-                  data: ['存活节点', '未存活节点'],
-                  top: 10
-                },
-                grid: {
-                  left: '3%',
-                  right: '4%',
-                  bottom: '3%',
-                  containLabel: true
-                },
-                xAxis: {
-                  type: 'category',
-                  boundaryGap: false,
-                  data: nodeAliveStats.map(item => item.time),
-                  axisLabel: {
-                    rotate: 45,
-                    interval: 'auto',
-                    hideOverlap: true
-                  }
-                },
-                yAxis: {
-                  type: 'value',
-                  name: '节点数量',
-                  min: 1000,
-                  max: 12000,
-                  interval: 2000,
-                  axisLabel: {
-                    formatter: function(value: number) {
-                      return value.toLocaleString();
-                    }
-                  }
-                },
-                series: [
-                  {
-                    name: '存活节点',
-                    type: 'line',
-                    smooth: true,
-                    data: nodeAliveStats.map(item => item.true_count),
-                    areaStyle: {
-                      color: 'rgba(82, 196, 26, 0.2)'
+        <Row gutter={16} style={{marginTop: '20px'}}>
+          {/* 折线图 */}
+          <Col span={18}>
+            <Card title="节点存活情况统计图" style={{height: '100%'}} loading={nodeAliveStatsLoading}>
+              <EChartComponent
+                option={{
+                  tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                      type: 'cross',
                     },
-                    lineStyle: {
-                      color: '#52c41a',
-                      width: 2
-                    },
-                    itemStyle: {
-                      color: '#52c41a'
+                    formatter: function (params: any) {
+                      let result = params[0].axisValue + '<br/>';
+                      params.forEach((param: any) => {
+                        result += param.marker + ' ' + param.seriesName + ': ' + param.value + ' 个节点<br/>';
+                      });
+                      return result;
                     }
                   },
-                  {
-                    name: '未存活节点',
-                    type: 'line',
-                    smooth: true,
-                    data: nodeAliveStats.map(item => item.false_count),
-                    areaStyle: {
-                      color: 'rgba(245, 34, 45, 0.2)'
-                    },
-                    lineStyle: {
-                      color: '#f5222d',
-                      width: 2
-                    },
-                    itemStyle: {
-                      color: '#f5222d'
+                  legend: {
+                    data: ['存活节点', '未存活节点'],
+                    top: 10
+                  },
+                  grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                  },
+                  xAxis: {
+                    type: 'category',
+                    boundaryGap: false,
+                    data: nodeAliveStats.map(item => item.time),
+                    axisLabel: {
+                      rotate: 45,
+                      interval: 'auto',
+                      hideOverlap: true
                     }
-                  }
-                ]
-              }}
-              height="400px"
-            />
-          </Card>
-        </Col>
-
-        {/* 饼状图 */}
-        <Col span={6}>
-          <Card title="存活/未存活 节点占比" style={{ height: '100%' }} loading={latestAliveRatioLoading}>
-            <EChartComponent
-              option={{
-                tooltip: {
-                  trigger: 'item',
-                  formatter: '{a} <br/>{b}: {c} ({d}%)',
-                },
-                legend: {
-                  orient: 'vertical',
-                  left: 'right',
-                  data: ['存活节点', '未存活节点'],
-                },
-                series: [
-                  {
-                    name: '节点总数',
-                    type: 'pie',
-                    radius: ['40%', '70%'],
-                    avoidLabelOverlap: false,
-                    label: {
-                      show: true,
-                      position: 'center',
-                      formatter: `节点总数\n${latestAliveRatio.true_count + latestAliveRatio.false_count}`,
-                      fontSize: 18,
-                      fontWeight: 'bold',
+                  },
+                  yAxis: {
+                    type: 'value',
+                    name: '节点数量',
+                    min: 1000,
+                    max: 12000,
+                    interval: 2000,
+                    axisLabel: {
+                      formatter: function (value: number) {
+                        return value.toLocaleString();
+                      }
+                    }
+                  },
+                  series: [
+                    {
+                      name: '存活节点',
+                      type: 'line',
+                      smooth: true,
+                      data: nodeAliveStats.map(item => item.true_count),
+                      areaStyle: {
+                        color: 'rgba(82, 196, 26, 0.2)'
+                      },
+                      lineStyle: {
+                        color: '#52c41a',
+                        width: 2
+                      },
+                      itemStyle: {
+                        color: '#52c41a'
+                      }
                     },
-                    emphasis: {
+                    {
+                      name: '未存活节点',
+                      type: 'line',
+                      smooth: true,
+                      data: nodeAliveStats.map(item => item.false_count),
+                      areaStyle: {
+                        color: 'rgba(245, 34, 45, 0.2)'
+                      },
+                      lineStyle: {
+                        color: '#f5222d',
+                        width: 2
+                      },
+                      itemStyle: {
+                        color: '#f5222d'
+                      }
+                    }
+                  ]
+                }}
+                height="400px"
+              />
+            </Card>
+          </Col>
+
+          {/* 饼状图 */}
+          <Col span={6}>
+            <Card title="存活/未存活 节点占比" style={{height: '100%'}} loading={latestAliveRatioLoading}>
+              <EChartComponent
+                option={{
+                  tooltip: {
+                    trigger: 'item',
+                    formatter: '{a} <br/>{b}: {c} ({d}%)',
+                  },
+                  legend: {
+                    orient: 'vertical',
+                    left: 'right',
+                    data: ['存活节点', '未存活节点'],
+                  },
+                  series: [
+                    {
+                      name: '节点总数',
+                      type: 'pie',
+                      radius: ['40%', '70%'],
+                      avoidLabelOverlap: false,
                       label: {
                         show: true,
-                        fontSize: '20',
+                        position: 'center',
+                        formatter: `节点总数\n${latestAliveRatio.true_count + latestAliveRatio.false_count}`,
+                        fontSize: 18,
                         fontWeight: 'bold',
                       },
-                    },
-                    labelLine: {
-                      show: false,
-                    },
-                    data: [
-                      { 
-                        value: latestAliveRatio.true_count, 
-                        name: '存活节点',
-                        itemStyle: { color: '#52c41a' }
+                      emphasis: {
+                        label: {
+                          show: true,
+                          fontSize: '20',
+                          fontWeight: 'bold',
+                        },
                       },
-                      { 
-                        value: latestAliveRatio.false_count, 
-                        name: '未存活节点',
-                        itemStyle: { color: '#f5222d' }
-                      }
-                    ],
-                  },
-                ],
-              }}
-              height="400px"
-            />
-          </Card>
-        </Col>
-      </Row>
-
-      <Row gutter={16} style={{ marginTop: '20px' }}>
-        {/* 柱状图 */}
-        <Col span={8}>
-          <Card title="节点全球地域分布情况" style={{ height: '100%' }} loading={topFiveCountriesLoading}>
-            <EChartComponent
-              option={{
-                tooltip: {
-                  trigger: 'axis',
-                  axisPointer: {
-                    type: 'shadow',
-                  },
-                  formatter: '{b}: {c} 个节点'
-                },
-                grid: {
-                  left: '3%',
-                  right: '4%',
-                  bottom: '3%',
-                  containLabel: true
-                },
-                xAxis: {
-                  type: 'category',
-                  data: topFiveCountries.map(item => item.country),
-                  axisLabel: {
-                    interval: 0,
-                    rotate: 30
-                  }
-                },
-                yAxis: {
-                  type: 'value',
-                  name: '节点数量'
-                },
-                series: [
-                  {
-                    name: '节点数量',
-                    type: 'bar',
-                    data: topFiveCountries.map(item => item.count),
-                    itemStyle: {
-                      color: function(params: any) {
-                        const colorList = ['#1890ff', '#52c41a', '#faad14', '#f5222d', '#722ed1'];
-                        return colorList[params.dataIndex];
-                      }
+                      labelLine: {
+                        show: false,
+                      },
+                      data: [
+                        {
+                          value: latestAliveRatio.true_count,
+                          name: '存活节点',
+                          itemStyle: {color: '#52c41a'}
+                        },
+                        {
+                          value: latestAliveRatio.false_count,
+                          name: '未存活节点',
+                          itemStyle: {color: '#f5222d'}
+                        }
+                      ],
                     },
-                    label: {
-                      show: true,
-                      position: 'top',
-                      formatter: '{c}'
+                  ],
+                }}
+                height="400px"
+              />
+            </Card>
+          </Col>
+        </Row>
+
+        <Row gutter={16} style={{marginTop: '20px'}}>
+          {/* 柱状图 */}
+          <Col span={8}>
+            <Card title="节点全球地域分布情况" style={{height: '100%'}} loading={topFiveCountriesLoading}>
+              <EChartComponent
+                option={{
+                  tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                      type: 'shadow',
+                    },
+                    formatter: '{b}: {c} 个节点'
+                  },
+                  grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                  },
+                  xAxis: {
+                    type: 'category',
+                    data: topFiveCountries.map(item => item.country),
+                    axisLabel: {
+                      interval: 0,
+                      rotate: 30
                     }
-                  }
-                ]
-              }}
-              height="400px"
-            />
-          </Card>
-        </Col>
+                  },
+                  yAxis: {
+                    type: 'value',
+                    name: '节点数量'
+                  },
+                  series: [
+                    {
+                      name: '节点数量',
+                      type: 'bar',
+                      data: topFiveCountries.map(item => item.count),
+                      itemStyle: {
+                        color: function (params: any) {
+                          const colorList = ['#1890ff', '#52c41a', '#faad14', '#f5222d', '#722ed1'];
+                          return colorList[params.dataIndex];
+                        }
+                      },
+                      label: {
+                        show: true,
+                        position: 'top',
+                        formatter: '{c}'
+                      }
+                    }
+                  ]
+                }}
+                height="400px"
+              />
+            </Card>
+          </Col>
 
-        {/* 世界地图 */}
-        <Col span={16}>
-          <Card title="分布情况展示" style={{ height: '100%' }}>
-            <div id="worldMap" style={{ width: '100%', height: '400px' }}></div>
-          </Card>
-        </Col>
-      </Row>
+          {/* 世界地图 */}
+          <Col span={16}>
+            <Card title="分布情况展示" style={{height: '100%'}}>
+              <div id="worldMap" style={{width: '100%', height: '400px'}}></div>
+            </Card>
+          </Col>
+        </Row>
 
-      <Row gutter={16} style={{ marginTop: '20px' }}>
-        {/* 列表 */}
-        <Col span={24}>
-          <Card title="Tor 节点数据列表" style={{ height: '100%' }}>
-            <Table
-              columns={[
-                { title: 'IP', dataIndex: 'IP', key: 'IP' },
-                { title: '名称', dataIndex: 'name', key: 'name' },
-                { title: '类型', dataIndex: 'type', key: 'type' },
-                { title: '昵称', dataIndex: 'nikename', key: 'nikename' },
-                { title: '发布日期', dataIndex: 'release_date', key: 'release_date' },
-                { title: '发布时间', dataIndex: 'release_time', key: 'release_time' },
-                { title: 'OR端口', dataIndex: 'ORPort', key: 'ORPort' },
-                { title: 'Dir端口', dataIndex: 'DirPort', key: 'DirPort' },
-                { title: 'Tor版本', dataIndex: 'Tor_ver', key: 'Tor_ver' },
-                { title: '状态', dataIndex: 'status_state', key: 'status_state' },
-                { title: '操作系统', dataIndex: 'OS', key: 'OS' },
-              ]}
-              dataSource={torProfileData}
-              loading={loading}
-              pagination={{ pageSize: 10 }}
-              scroll={{ x: 1500 }}
-              onRow={(record) => ({
-                onClick: () => handleTableRowClick(record),
-                style: { cursor: 'pointer' }
-              })}
-            />
-          </Card>
-        </Col>
-      </Row>
-    </div>
-  );
-};
+        <Row gutter={16} style={{marginTop: '20px'}}>
+          {/* 列表 */}
+          <Col span={24}>
+            <Card title="Tor 节点数据列表" style={{height: '100%'}}>
+              <Table
+                columns={[
+                  {title: 'IP', dataIndex: 'IP', key: 'IP'},
+                  {title: '名称', dataIndex: 'name', key: 'name'},
+                  {title: '类型', dataIndex: 'type', key: 'type'},
+                  {title: '昵称', dataIndex: 'nikename', key: 'nikename'},
+                  {title: '发布日期', dataIndex: 'release_date', key: 'release_date'},
+                  {title: '发布时间', dataIndex: 'release_time', key: 'release_time'},
+                  {title: 'OR端口', dataIndex: 'ORPort', key: 'ORPort'},
+                  {title: 'Dir端口', dataIndex: 'DirPort', key: 'DirPort'},
+                  {title: 'Tor版本', dataIndex: 'Tor_ver', key: 'Tor_ver'},
+                  {title: '状态', dataIndex: 'status_state', key: 'status_state'},
+                  {title: '操作系统', dataIndex: 'OS', key: 'OS'},
+                ]}
+                dataSource={torProfileData}
+                loading={loading}
+                pagination={{pageSize: 10}}
+                scroll={{x: 1500}}
+                onRow={(record) => ({
+                  onClick: () => handleTableRowClick(record),
+                  style: {cursor: 'pointer'}
+                })}
+              />
+            </Card>
+          </Col>
+        </Row>
+      </div>
+      </>
+      );
+      };
 
-export default Statistics;
+      export default Statistics;
