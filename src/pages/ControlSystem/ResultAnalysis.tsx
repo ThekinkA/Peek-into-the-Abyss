@@ -15,6 +15,10 @@ const steps = [
   '输出包含概率的攻击图',
   '进入大模型提取分析',
 ];
+const ATTACK_COLUMNS = [
+  'Reconnaissance', 'Resource Development', 'Initial Access', 'Execution', 'Persistence', 'Privilege Escalation',
+  'Defense Evasion', 'Credential Access', 'Discovery', 'Lateral Movement', 'Collection', 'Command and Control'
+];
 
 const ResultAnalysis: React.FC = () => {
   const { state } = useLocation();
@@ -26,6 +30,639 @@ const ResultAnalysis: React.FC = () => {
   const [graphData, setGraphData] = useState<{ nodes: any[]; relationships: any[] } | null>(null);
   const [queryIndex, setQueryIndex] = useState(1); // 当前查询索引，初始值为 1
   const [noResult, setNoResult] = useState(false); // 是否显示“未查询到结果”的提示
+  const [attackHighlight, setAttackHighlight] = useState<number[]>([]);
+
+  // ATT&CK矩阵数据（不变）
+  const attackMatrix: string[][] = [
+    [
+      // Reconnaissance
+      'Active Scanning (3)',
+      // Resource Development
+      'Acquire Access',
+      // Initial Access
+      'Content Injection',
+      // Execution
+      'Cloud Administration Command',
+      // Persistence
+      'Account Manipulation (7)',
+      // Privilege Escalation
+      'Abuse Elevation Control Mechanism (6)',
+      // Defense Evasion
+      'Abuse Elevation Control Mechanism (6)',
+      // Credential Access
+      'Adversary-in-the-Middle (4)',
+      // Discovery
+      'Account Discovery (4)',
+      // Lateral Movement
+      'Exploitation of Remote Services',
+      // Collection
+      'Adversary-in-the-Middle (4)',
+      // Command and Control
+      'Application Layer Protocol (5)'
+    ],
+    [
+      'Gather Victim Host Information (4)',
+      'Acquire Infrastructure (8)',
+      'Drive-by Compromise',
+      'Command and Scripting Interpreter (12)',
+      'BITS Jobs',
+      'Access Token Manipulation (5)',
+      'Access Token Manipulation (5)',
+      'Brute Force (4)',
+      'Application Window Discovery',
+      'Internal Spearphishing',
+      'Archive Collected Data (3)',
+      'Communication Through Removable Media'
+    ],
+    [
+      'Gather Victim Identity Information (3)',
+      'Compromise Accounts (3)',
+      'Exploit Public-Facing Application',
+      'Container Administration Command',
+      'Boot or Logon Autostart Execution (14)',
+      'Account Manipulation (7)',
+      'BITS Jobs',
+      'Credentials from Password Stores (6)',
+      'Browser Information Discovery',
+      'Lateral Tool Transfer',
+      'Audio Capture',
+      'Content Injection'
+    ],
+    [
+      'Gather Victim Network Information (6)',
+      'Compromise Infrastructure (8)',
+      'External Remote Services',
+      'Deploy Container',
+      'Boot or Logon Initialization Scripts (5)',
+      'Boot or Logon Autostart Execution (14)',
+      'Build Image on Host',
+      'Exploitation for Credential Access',
+      'Cloud Infrastructure Discovery',
+      'Remote Service Session Hijacking (2)',
+      'Automated Collection',
+      'Data Encoding (2)'
+    ],
+    [
+      'Gather Victim Org Information (4)',
+      'Develop Capabilities (4)',
+      'Hardware Additions',
+      'ESXi Administration Command',
+      'Cloud Application Integration',
+      'Boot or Logon Initialization Scripts (5)',
+      'Debugger Evasion',
+      'Forced Authentication',
+      'Cloud Service Dashboard',
+      'Remote Services (8)',
+      'Browser Session Hijacking',
+      'Data Obfuscation (3)'
+    ],
+    [
+      'Phishing for Information (4)',
+      'Establish Accounts (3)',
+      'Phishing (4)',
+      'Exploitation for Client Execution',
+      'Compromise Host Software Binary',
+      'Create or Modify System Process (5)',
+      'Deobfuscate/Decode Files or Information',
+      'Forge Web Credentials (2)',
+      'Cloud Service Discovery',
+      'Replication Through Removable Media',
+      'Clipboard Data',
+      'Dynamic Resolution (3)'
+    ],
+    [
+      'Search Closed Sources (2)',
+      'Obtain Capabilities (7)',
+      'Replication Through Removable Media',
+      'Input Injection',
+      'Create Account (3)',
+      'Domain or Tenant Policy Modification (2)',
+      'Deploy Container',
+      'Input Capture (4)',
+      'Cloud Storage Object Discovery',
+      'Software Deployment Tools',
+      'Data from Cloud Storage',
+      'Encrypted Channel (2)'
+    ],
+    [
+      'Search Open Technical Databases (5)',
+      'Stage Capabilities (6)',
+      'Supply Chain Compromise (3)',
+      'Inter-Process Communication (3)',
+      'Event Triggered Execution (17)',
+      'Escape to Host',
+      'Direct Volume Access',
+      'Modify Authentication Process (9)',
+      'Container and Resource Discovery',
+      'Taint Shared Content',
+      'Data from Configuration Repository (2)',
+      'Fallback Channels'
+    ],
+    [
+      'Search Open Websites/Domains (3)',
+      '',
+      'Trusted Relationship',
+      'Native API',
+      'Exclusive Control',
+      'Event Triggered Execution (17)',
+      'Email Spoofing',
+      'Multi-Factor Authentication Interception',
+      'Debugger Evasion',
+      'Use Alternate Authentication Material (4)',
+      'Data from Information Repositories (5)',
+      'Hide Infrastructure'
+    ],
+    [
+      'Search Victim-Owned Websites',
+      '',
+      'Valid Accounts (4)',
+      'Scheduled Task/Job (5)',
+      'External Remote Services',
+      'Exploitation for Privilege Escalation',
+      'Execution Guardrails (2)',
+      'Multi-Factor Authentication Request Generation',
+      'Device Driver Discovery',
+      '',
+      'Data from Local System',
+      'Ingress Tool Transfer'
+    ],
+    [
+      '',
+      '',
+      'Wi-Fi Networks',
+      'Serverless Execution',
+      'Hijack Execution Flow (12)',
+      'Hijack Execution Flow (12)',
+      'Exploitation for Defense Evasion',
+      'Network Sniffing',
+      'Domain Trust Discovery',
+      '',
+      'Data from Network Shared Drive',
+      'Multi-Stage Channels'
+    ],
+    [
+      '',
+      '',
+      '',
+      'Shared Modules',
+      'Implant Internal Image',
+      'Process Injection (12)',
+      'File and Directory Permissions Modification (2)',
+      'OS Credential Dumping (8)',
+      'File and Directory Discovery',
+      '',
+      'Data from Removable Media',
+      'Non-Application Layer Protocol'
+    ],
+    [
+      '',
+      '',
+      '',
+      'Software Deployment Tools',
+      'Modify Authentication Process (9)',
+      'Scheduled Task/Job (5)',
+      'Hide Artifacts (14)',
+      'Steal Application Access Token',
+      'Group Policy Discovery',
+      '',
+      'Data Staged (2)',
+      'Non-Standard Port'
+    ],
+    [
+      '',
+      '',
+      '',
+      'System Services (3)',
+      'Modify Registry',
+      'Valid Accounts (4)',
+      'Hijack Execution Flow (12)',
+      'Steal or Forge Authentication Certificates',
+      'Log Enumeration',
+      '',
+      'Email Collection (3)',
+      'Protocol Tunneling'
+    ],
+    [
+      '',
+      '',
+      '',
+      'User Execution (4)',
+      'Office Application Startup (6)',
+      '',
+      'Impair Defenses (11)',
+      'Steal or Forge Kerberos Tickets (5)',
+      'Network Service Discovery',
+      '',
+      'Input Capture (4)',
+      'Proxy (4)'
+    ],
+    [
+      '',
+      '',
+      '',
+      'Windows Management Instrumentation',
+      'Power Settings',
+      '',
+      'Impersonation',
+      'Steal Web Session Cookie',
+      'Network Share Discovery',
+      '',
+      'Screen Capture',
+      'Remote Access Tools (3)'
+    ],
+    [
+      '',
+      '',
+      '',
+      '',
+      'Pre-OS Boot (5)',
+      '',
+      'Indicator Removal (10)',
+      'Unsecured Credentials (8)',
+      'Password Policy Discovery',
+      '',
+      'Video Capture',
+      'Traffic Signaling (2)'
+    ],
+    [
+      '',
+      '',
+      '',
+      '',
+      'Scheduled Task/Job (5)',
+      '',
+      'Indirect Command Execution',
+      '',
+      'Permission Groups Discovery (3)',
+      '',
+      '',
+      'Web Service (3)'
+    ],
+    [
+      '',
+      '',
+      '',
+      '',
+      'Server Software Component (6)',
+      '',
+      'Masquerading (11)',
+      '',
+      'Plist File Modification',
+      '',
+      '',
+      ''
+    ],
+    [
+      '',
+      '',
+      '',
+      '',
+      'Software Extensions (2)',
+      '',
+      'Modify Authentication Process (9)',
+      '',
+      'Pre-OS Boot (5)',
+      '',
+      '',
+      ''
+    ],
+    [
+      '',
+      '',
+      '',
+      '',
+      'Traffic Signaling (2)',
+      '',
+      'Modify Cloud Compute Infrastructure (5)',
+      '',
+      'Process Discovery',
+      '',
+      '',
+      ''
+    ],
+    [
+      '',
+      '',
+      '',
+      '',
+      'Valid Accounts (4)',
+      '',
+      'Modify Cloud Resource Hierarchy',
+      '',
+      'Query Registry',
+      '',
+      '',
+      ''
+    ],
+    [
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      'Modify Registry',
+      '',
+      'Remote System Discovery',
+      '',
+      '',
+      ''
+    ],
+    [
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      'Modify System Image (2)',
+      '',
+      'Software Discovery (1)',
+      '',
+      '',
+      ''
+    ],
+    [
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      'Network Boundary Bridging (1)',
+      '',
+      'System Information Discovery',
+      '',
+      '',
+      ''
+    ],
+    [
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      'Obfuscated Files or Information (17)',
+      '',
+      'System Location Discovery (1)',
+      '',
+      '',
+      ''
+    ],
+    [
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      'Plist File Modification',
+      '',
+      'System Network Configuration Discovery (2)',
+      '',
+      '',
+      ''
+    ],
+    [
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      'Pre-OS Boot (5)',
+      '',
+      'System Network Connections Discovery',
+      '',
+      '',
+      ''
+    ],
+    [
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      'Process Injection (12)',
+      '',
+      'System Owner/User Discovery',
+      '',
+      '',
+      ''
+    ],
+    [
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      'Reflective Code Loading',
+      '',
+      'System Service Discovery',
+      '',
+      '',
+      ''
+    ],
+    [
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      'Rogue Domain Controller',
+      '',
+      'System Time Discovery',
+      '',
+      '',
+      ''
+    ],
+    [
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      'Rootkit',
+      '',
+      'Virtual Machine Discovery',
+      '',
+      '',
+      ''
+    ],
+    [
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      'Subvert Trust Controls (6)',
+      '',
+      'Virtualization/Sandbox Evasion (3)',
+      '',
+      '',
+      ''
+    ],
+    [
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      'System Binary Proxy Execution (14)',
+      '',
+      '',
+      '',
+      '',
+      ''
+    ],
+    [
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      'System Script Proxy Execution (2)',
+      '',
+      '',
+      '',
+      '',
+      ''
+    ],
+    [
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      'Template Injection',
+      '',
+      '',
+      '',
+      '',
+      ''
+    ],
+    [
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      'Traffic Signaling (2)',
+      '',
+      '',
+      '',
+      '',
+      ''
+    ],
+    [
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      'Trusted Developer Utilities Proxy Execution (3)',
+      '',
+      '',
+      '',
+      '',
+      ''
+    ],
+    [
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      'Unused/Unsupported Cloud Regions',
+      '',
+      '',
+      '',
+      '',
+      ''
+    ],
+    [
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      'Use Alternate Authentication Material (4)',
+      '',
+      '',
+      '',
+      '',
+      ''
+    ],
+    [
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      'Valid Accounts (4)',
+      '',
+      '',
+      '',
+      '',
+      ''
+    ],
+    [
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      'Virtualization/Sandbox Evasion (3)',
+      '',
+      '',
+      '',
+      '',
+      ''
+    ],
+    [
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      'Weaken Encryption (2)',
+      '',
+      '',
+      '',
+      '',
+      ''
+    ],
+    [
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      'XSL Script Processing',
+      '',
+      '',
+      '',
+      '',
+      ''
+    ],
+  ];
 
   const checkStepStatus = async (step: string) => {
     try {
@@ -204,20 +841,36 @@ const ResultAnalysis: React.FC = () => {
     fetchGraphData();
   }, [queryIndex]);
 
+  // 动态读取高亮配置
+  useEffect(() => {
+    fetch('/data/attck_output.txt')
+      .then(res => res.text())
+      .then(text => {
+        // 匹配“攻击路径的attck表示为：1，1，3，3，1，5，6，4，12，1，1，1。”
+        const match = text.match(/攻击路径的attck表示为：([\d，, ]+)/);
+        if (match) {
+          // 兼容中文逗号和英文逗号
+          const arr = match[1].replace(/，/g, ',').split(',').map(s => parseInt(s.trim(), 10) - 1);
+          setAttackHighlight(arr);
+        }
+      })
+      .catch(() => setAttackHighlight([]));
+  }, []);
+
   return (
     <>
-      <div style={{position: 'fixed', top: 0, bottom: 0, right: 0, left: 0, minHeight: '100vh'}}>
-        <StarryBackground/>
-        <Layout style={{position: 'fixed', top: 0, bottom: 0, right: 0, left: 0, zIndex: -1}}>
+      <div style={{ position: 'fixed', top: 0, bottom: 0, right: 0, left: 0, minHeight: '100vh' }}>
+        <StarryBackground />
+        <Layout style={{ position: 'fixed', top: 0, bottom: 0, right: 0, left: 0, zIndex: -1 }}>
         </Layout>
       </div>
       <div className="result-analysis-container">
-        <div style={{marginBottom: '20px', textAlign: 'center'}}>
-          <h2 style={{fontWeight: 'bold', color: '#333'}}>攻击路径分析</h2>
+        <div style={{ marginBottom: '20px', textAlign: 'center' }}>
+          <h2 style={{ fontWeight: 'bold', color: '#333' }}>攻击路径分析</h2>
           当前IP: <Tag color="red">{ip}</Tag>
         </div>
 
-        <Row gutter={16} className="flow-container" style={{marginBottom: '20px'}}>
+        <Row gutter={16} className="flow-container" style={{ marginBottom: '20px' }}>
           {steps.map((step, index) => (
             <React.Fragment key={index}>
               <Col>
@@ -238,7 +891,7 @@ const ResultAnalysis: React.FC = () => {
                 <Col>
                   <ArrowRightOutlined
                     className={`flow-arrow ${index < currentStep - 1 ? 'visible' : ''}`}
-                    style={{fontSize: '20px', color: '#1890ff'}}
+                    style={{ fontSize: '20px', color: '#1890ff' }}
                   />
                 </Col>
               )}
@@ -257,13 +910,13 @@ const ResultAnalysis: React.FC = () => {
             }
           }}
         >
-          <Row gutter={24} style={{marginTop: '40px'}}>
+          <Row gutter={24} style={{ marginTop: '40px' }}>
             <Col span={24}>
               <Card
                 title={
-                  <span style={{fontSize: '20px', fontWeight: 'bold', color: 'white'}}>
-                  {cardTitle}
-                </span>
+                  <span style={{ fontSize: '20px', fontWeight: 'bold', color: 'white' }}>
+                    {cardTitle}
+                  </span>
                 }
                 style={{
                   height: '700px',
@@ -277,10 +930,10 @@ const ResultAnalysis: React.FC = () => {
                   <iframe
                     src={pdfFile}
                     title="PDF Viewer"
-                    style={{width: '100%', height: '600px', border: 'none'}}
+                    style={{ width: '100%', height: '600px', border: 'none' }}
                   ></iframe>
                 ) : noResult ? (
-                  <div style={{textAlign: 'center', color: '#ff4d4f', fontSize: '18px'}}>
+                  <div style={{ textAlign: 'center', color: '#ff4d4f', fontSize: '18px' }}>
                     未查询到结果
                   </div>
                 ) : (
@@ -298,7 +951,7 @@ const ResultAnalysis: React.FC = () => {
 
                 {/* 左右箭头按钮 */}
                 {!pdfFile && (
-                  <div style={{position: 'absolute', bottom: '20px', right: '20px', display: 'flex', gap: '10px'}}>
+                  <div style={{ position: 'absolute', bottom: '20px', right: '20px', display: 'flex', gap: '10px' }}>
                     <button
                       style={{
                         backgroundColor: '#1890ff',
@@ -336,24 +989,65 @@ const ResultAnalysis: React.FC = () => {
                 )}
               </Card>
             </Col>
-            <Col span={24} style={{marginTop: '20px'}}>
+            <Col span={24} style={{ marginTop: '20px' }}>
               <Card
-                title="报告文本"
+                title="ATT&CK矩阵"
                 style={{
-                  height: '300px',
+                  height: '600px',
                   width: '100%',
                   boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
                   borderRadius: '8px',
+                  overflowX: 'auto',
+                  background: '#181c24',
                 }}
               >
-                <p style={{color: '#555'}}>这里是报告文本的内容。</p>
+                <div style={{ overflowX: 'auto', width: '100%' }}>
+                  <table style={{ borderCollapse: 'collapse', width: '100%', minWidth: 1800, color: '#fff', fontSize: 13 }}>
+                    <thead>
+                      <tr>
+                        {ATTACK_COLUMNS.map((col) => (
+                          <th key={col} style={{
+                            border: '1px solid #333', background: '#222', padding: 6, minWidth: 120, fontWeight: 700
+                          }}>{col}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {attackMatrix.map((row, rowIdx) => (
+                        <tr key={rowIdx}>
+                          {row.map((cell, colIdx) => {
+                            // 动态高亮：如果attackHighlight[colIdx] === rowIdx，则高亮
+                            const highlight = cell && attackHighlight[colIdx] === rowIdx;
+                            return (
+                              <td
+                                key={colIdx}
+                                style={{
+                                  border: '1px solid #333',
+                                  background: highlight ? '#f87171' : '#222',
+                                  color: highlight ? '#fff' : '#c9d1d9',
+                                  padding: '4px 8px',
+                                  fontWeight: highlight ? 700 : 400,
+                                  minWidth: 120,
+                                  cursor: cell ? 'pointer' : 'default',
+                                  opacity: cell ? 1 : 0.3,
+                                }}
+                              >
+                                {cell}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </Card>
             </Col>
           </Row>
         </CSSTransition>
       </div>
-      </>
-      );
-      };
+    </>
+  );
+};
 
-      export default ResultAnalysis;
+export default ResultAnalysis;
