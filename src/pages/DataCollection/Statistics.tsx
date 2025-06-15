@@ -296,7 +296,7 @@ const Statistics: React.FC = () => {
             <div className="card">
               <div style={{padding: '20px', position: 'relative'}}>
                 <div className="subtitle">已检测天数</div>
-                <div className="text">16</div>
+                <div className="text">24</div>
                 <CalendarOutlined
                   style={{
                     fontSize: '40px',
@@ -313,7 +313,7 @@ const Statistics: React.FC = () => {
             <div className="card">
               <div style={{padding: '20px', position: 'relative'}}>
                 <div className="subtitle">已检测节点总数</div>
-                <div className="text">6,560</div>
+                <div className="text">36,560</div>
                 <NodeIndexOutlined
                   style={{
                     fontSize: '40px',
@@ -330,7 +330,7 @@ const Statistics: React.FC = () => {
             <div className="card">
               <div style={{padding: '20px', position: 'relative'}}>
                 <div className="subtitle">已检测C段IP总数</div>
-                <div className="text">126,560</div>
+                <div className="text">371,274</div>
                 <GlobalOutlined
                   style={{
                     fontSize: '40px',
@@ -347,7 +347,7 @@ const Statistics: React.FC = () => {
             <div className="card">
               <div style={{padding: '20px', position: 'relative'}}>
                 <div className="subtitle">生成攻击路径总数</div>
-                <div className="text">78</div>
+                <div className="text">112</div>
                 <AimOutlined
                   style={{
                     fontSize: '40px',
@@ -368,7 +368,7 @@ const Statistics: React.FC = () => {
             <Card title="Tor官网数据统计" style={{height: '100%'}}>
               <Row gutter={16} style={{marginTop: '20px'}}>
                 <Col span={8}>
-                  <Card title="第 54 次更新 Tor 官网数据" style={{height: '100%'}}>
+                  <Card title="第 164 次更新 Tor 官网数据" style={{height: '100%'}}>
                     <div style={{fontSize: '16px', textAlign: 'center', padding: '20px'}}>
                       本次更新包含最新的 Tor 节点信息。
                     </div>
@@ -384,7 +384,7 @@ const Statistics: React.FC = () => {
                 <Col span={8}>
                   <Card title="最新节点数据" style={{height: '100%'}}>
                     <div style={{fontSize: '16px', textAlign: 'center', padding: '20px'}}>
-                      共计 12,345 个节点。
+                      共计 8,490 个节点。
                     </div>
                   </Card>
                 </Col>

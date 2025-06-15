@@ -492,7 +492,7 @@ const VulnerabilityInfo: React.FC = () => {
                 const response = await getDefaultCClassAliveData();
                 if (response.success && response.data) {
                     setCClassData(response.data);
-                    setTargetIp(response.data.original_ip);
+                    //setTargetIp(response.data.original_ip);
                     const ips = [
                         response.data.host1,
                         response.data.host2,

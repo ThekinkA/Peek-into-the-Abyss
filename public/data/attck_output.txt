@@ -1,17 +1,20 @@
 
 
-攻击路径的attck表示为：4,2,3,3,11,7,3,14,12,1,7,5。
+攻击路径的attck表示为：8，4，3，6，1，7，11，1，5，1，1，1。
 
-**解析：**
-1. **Reconnaissance (侦查)**：攻击者通过收集目标网络信息（MySQL服务暴露在公网），选择“Gather Victim Network Information (6)”，对应第4项。
-2. **Resource Development (资源开发)**：攻击者未主动开发新资源，但利用现有基础设施，选择“Acquire Infrastructure (8)”，对应第2项。
-3. **Initial Access (初始访问)**：通过公网MySQL服务利用漏洞，对应“Exploit Public-Facing Application”，选第3项。
-4. **Execution (执行)**：利用CVE-2022-24052执行代码，对应“Exploitation for Client Execution”，选第3项。
-5. **Persistence (持久化)**：攻击路径未明确持久化步骤，但漏洞利用可能劫持执行流，选“Hijack Execution Flow (12)”，对应第11项。
-6. **Privilege Escalation (权限提升)**：漏洞直接用于提权，选“Exploitation for Privilege Escalation”，对应第7项。
-7. **Defense Evasion (防御规避)**：利用漏洞绕过防御机制，选“Exploitation for Defense Evasion”，对应第3项。
-8. **Credential Access (凭证访问)**：通过代码执行可能转储凭据，选“OS Credential Dumping (8)”，对应第14项。
-9. **Discovery (发现)**：攻击者发现MySQL服务，对应“Network Service Discovery”，选第12项。
-10. **Lateral Movement (横向移动)**：无明确横向移动步骤，但漏洞利用属于远程服务利用，选“Exploitation of Remote Services”，对应第1项。
-11. **Collection (收集)**：未涉及数据收集，选最接近的“Data from Local System”，对应第7项。
-12. **Command and Control (命令与控制)**：通过MySQL协议通信，选“Application Layer Protocol (5)”，对应第5项。
+**步骤解析：**
+
+1. **Reconnaissance (8 - Search Open Technical Databases)：** 攻击者可能通过公开数据库（如CVE信息）获取漏洞详情。
+2. **Resource Development (4 - Develop Capabilities)：** 开发或获取利用CVE-2022-24052的漏洞利用工具。
+3. **Initial Access (3 - Exploit Public-Facing Application)：** 攻击者利用暴露的MySQL服务（端口3306）作为初始入口。
+4. **Execution (6 - Exploitation for Client Execution)：** 利用漏洞在目标系统执行代码，属于客户端漏洞利用。
+5. **Persistence (1 - Account Manipulation)：** 无明确持久性步骤，默认选首项。
+6. **Privilege Escalation (7 - Exploitation for Privilege Escalation)：** 利用漏洞进行权限提升。
+7. **Defense Evasion (11 - Exploitation for Defense Evasion)：** 漏洞利用本身绕过防御机制。
+8. **Credential Access (1 - Adversary-in-the-Middle)：** 无凭证窃取，默认选首项。
+9. **Discovery (5 - Network Service Discovery)：** 发现目标主机的MySQL服务。
+10. **Lateral Movement (1 - Exploitation of Remote Services)：** 无横向移动，默认选首项。
+11. **Collection (1 - Adversary-in-the-Middle)：** 无数据收集，默认选首项。
+12. **Command and Control (1 - Application Layer Protocol)：** 假设后续通信使用应用层协议，默认选首项。 
+
+注：部分列因攻击路径未明确对应步骤，选择默认或最接近项。

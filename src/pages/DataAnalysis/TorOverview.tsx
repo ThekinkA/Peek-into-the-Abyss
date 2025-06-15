@@ -41,8 +41,8 @@ type VulnerabilityDetailsMap = {
 };
 
 const mockVulnerabilityDetails: VulnerabilityDetailsMap = {
-  'CVE-2024-38472': {
-    vulnerability_CVE: 'CVE-2023-1234',
+  'CVE-2025-26465': {
+    vulnerability_CVE: 'CVE-2025-26465',
     description: 'Tor 网络中的流量分析漏洞，攻击者可能通过分析流量模式识别用户身份。该漏洞影响 Tor 0.4.7.x 版本，允许攻击者通过观察网络流量特征来推断用户行为模式。',
     severity: '高危',
     affected_versions: 'Tor 0.4.7.0 - 0.4.7.12',
@@ -423,12 +423,17 @@ const TorNodeVisualization = () => {
             { name: 'family:2', symbolSize: 50, itemStyle: { color: '#F4D03F' } },
             { name: '57.128.180.74', symbolSize: 30, itemStyle: { color: '#3498DB' } },
             { name: '216.181.20.181', symbolSize: 30, itemStyle: { color: '#E74C3C' } },
+            { name: 'family:3', symbolSize: 50, itemStyle: { color: '#8B0000' } },
+            { name: '1.114.80.42', symbolSize: 30, itemStyle: { color: '#FF3399' } },
+            { name: '126.1.41.21', symbolSize: 30, itemStyle: { color: '#E5FFCC' } },
           ],
           links: [
             { source: 'family:1', target: '185.40.4.29', lineStyle: { color: '#FF6F61' } },
             { source: 'family:1', target: '185.229.90.81', lineStyle: { color: '#FF6F61' } },
             { source: 'family:2', target: '57.128.180.74', lineStyle: { color: '#F4D03F' } },
             { source: 'family:2', target: '216.181.20.181', lineStyle: { color: '#F4D03F' } },
+            { source: 'family:3', target: '1.114.80.42', lineStyle: { color: '#F4D03F' } },
+            { source: 'family:3', target: '126.1.41.21', lineStyle: { color: '#F4D03F' } },
           ],
         },
       ],

@@ -790,7 +790,7 @@ const ResultAnalysis: React.FC = () => {
             target: rel.target.toString(),
             type: rel.type,
             label: {
-              show: true,
+              show: false,
               formatter: rel.type,
               fontSize: 14, // 设置字体大小
               fontWeight: 'bold', // 设置字体粗细
