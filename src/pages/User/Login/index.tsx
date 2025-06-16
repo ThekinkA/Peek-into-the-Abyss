@@ -43,7 +43,7 @@ const useStyles = createStyles(({ token }) => {
       right: 16,
       borderRadius: token.borderRadius,
       ':hover': {
-        backgroundColor: token.colorBgTextHover,
+        backgroundColor: '#1c1c1c',
       },
     },
     container: {
@@ -51,8 +51,10 @@ const useStyles = createStyles(({ token }) => {
       flexDirection: 'column',
       height: '100vh',
       overflow: 'auto',
-      backgroundImage:
-        "url('https://mdn.alipayobjects.com/yuyan_qk0oxh/afts/img/V-_oS6r-i7wAAAAAAAAAAAAAFl94AQBr')",
+      // backgroundColor: '#1c1c1c',
+      // color:'#ffffff',
+      // backgroundImage:
+      //   "url('https://mdn.alipayobjects.com/yuyan_qk0oxh/afts/img/V-_oS6r-i7wAAAAAAAAAAAAAFl94AQBr')",
       backgroundSize: '100% 100%',
     },
   };
@@ -144,12 +146,13 @@ const Login: React.FC = () => {
   const { status, type: loginType } = userLoginState;
 
   return (
+
     <div className={styles.container}>
       <Helmet>
         <title>
           {intl.formatMessage({
             id: 'menu.login',
-            defaultMessage: '登录页',
+            defaultMessage: '登录界面',
           })}
           - {Settings.title}
         </title>
@@ -166,19 +169,19 @@ const Login: React.FC = () => {
             minWidth: 280,
             maxWidth: '75vw',
           }}
-          logo={<img alt="logo" src="/logo.svg" />}
-          title="Ant Design"
+          logo={<img alt="logo" src="/logo.png" />}
+          title="暗网态势感知平台"
           subTitle={intl.formatMessage({ id: 'pages.layouts.userLayout.title' })}
           initialValues={{
             autoLogin: true,
           }}
           actions={[
-            <FormattedMessage
-              key="loginWith"
-              id="pages.login.loginWith"
-              defaultMessage="其他登录方式"
-            />,
-            <ActionIcons key="icons" />,
+            // <FormattedMessage
+            //   key="loginWith"
+            //   id="pages.login.loginWith"
+            //   defaultMessage="其他登录方式"
+            // />,
+            // <ActionIcons key="icons" />,
           ]}
           onFinish={async (values) => {
             await handleSubmit(values as API.LoginParams);
@@ -365,6 +368,7 @@ const Login: React.FC = () => {
       </div>
       <Footer />
     </div>
+    // </div>
   );
 };
 
