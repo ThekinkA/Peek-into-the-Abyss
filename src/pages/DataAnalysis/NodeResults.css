@@ -1,6 +1,401 @@
-
-#neo4jGraph {
+/* TorNodeVisualization.css */
+#nodeMap {
   width: 100%;
-  height: 400px;
-  background-color: #f0f0f0; /* 设置背景颜色 */
+  height: 100%;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
+
+#worldMap {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  /* 确保地图容器相对定位 */
+  z-index: 1;
+  /* 设置较低的层级 */
+}
+
+.ant-card {
+  border-radius: 12px;
+  transition: box-shadow 0.3s;
+}
+
+.ant-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* 按钮样式调整 */
+.ant-btn {
+  border-radius: 20px;
+  padding: 6px 20px;
+}
+
+.ant-btn-primary {
+  background-color: #ffffff !important;
+  color: #3498db !important;
+  border: 2px solid #3498db !important;
+}
+
+.ant-btn-primary:hover {
+  background-color: #f0f8ff !important;
+}
+
+.card-container {
+  perspective: 1000px;
+  position: relative;
+  /* 确保卡片容器相对定位 */
+  z-index: 10;
+  /* 提高卡片的层级 */
+}
+
+.card {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.6s;
+}
+
+.card.flipped {
+  transform: rotateY(180deg);
+}
+
+.card-front,
+.card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+}
+
+.card-back {
+  transform: rotateY(180deg);
+}
+
+/* TorOverview.css */
+.card-container {
+  transform-style: preserve-3d;
+  transition: transform 0.6s;
+  height: 100%;
+}
+
+.card-container.flipped {
+  transform: rotateY(180deg);
+}
+
+.card-face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+}
+.card-container {
+  perspective: 1000px;
+}
+
+.card-face {
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+}
+
+.card-front, .card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+}
+
+#familyGraph,
+#vulnBarChart {
+  width: 100%;
+  height: 100%;
+}
+
+/* 基础样式重置和全局设置 */
+.tor-overview-container {
+  padding: 24px;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+/* 卡片容器样式 */
+.card-container {
+  perspective: 1000px;
+  height: 320px;
+  margin-bottom: 24px;
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-container.flipped {
+  transform: rotateY(180deg);
+}
+
+.card-face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.card-front {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+}
+
+.card-back {
+  transform: rotateY(180deg);
+  background: #ffffff;
+}
+
+/* Ant Design 组件样式覆盖 */
+.ant-card {
+  height: 100%;
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.ant-card:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.ant-card-head {
+  border-bottom: 1px solid #f0f0f0;
+  padding: 16px 24px;
+}
+
+.ant-card-head-title {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.ant-card-body {
+  padding: 24px;
+  height: calc(100% - 57px);
+  overflow: auto;
+}
+
+/* 统计卡片样式 */
+.statistic-card {
+  text-align: center;
+  padding: 16px;
+}
+
+.statistic-card .ant-statistic-title {
+  color: rgba(0, 0, 0, 0.45);
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.statistic-card .ant-statistic-content {
+  color: rgba(0, 0, 0, 0.85);
+  font-size: 24px;
+  font-weight: 600;
+}
+
+/* 表格样式优化 */
+.ant-table {
+  background: transparent;
+}
+
+.ant-table-thead > tr > th {
+  background: #fafafa;
+  font-weight: 600;
+}
+
+.ant-table-tbody > tr > td {
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.ant-table-pagination {
+  margin: 16px 0 0 0;
+}
+
+/* 按钮样式 */
+.ant-btn {
+  height: 36px;
+  padding: 0 20px;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.ant-btn-primary {
+  background: #1890ff;
+  border-color: #1890ff;
+}
+
+.ant-btn-primary:hover {
+  background: #40a9ff;
+  border-color: #40a9ff;
+  transform: translateY(-1px);
+}
+
+/* 图表容器样式 */
+.chart-container {
+  height: 400px;
+  padding: 16px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+#familyGraph,
+#vulnChart {
+  width: 100%;
+  height: 100%;
+  min-height: 300px;
+}
+
+/* 响应式布局 */
+@media screen and (max-width: 1200px) {
+  .card-container {
+    height: 280px;
+  }
+  
+  .ant-card-head-title {
+    font-size: 16px;
+  }
+  
+  .statistic-card .ant-statistic-content {
+    font-size: 20px;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .tor-overview-container {
+    padding: 16px;
+  }
+  
+  .card-container {
+    height: 260px;
+    margin-bottom: 16px;
+  }
+  
+  .ant-card-body {
+    padding: 16px;
+  }
+  
+  .chart-container {
+    height: 300px;
+  }
+}
+
+/* 知识图谱说明卡片样式 */
+.knowledge-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.knowledge-card .ant-card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.knowledge-card p {
+  margin: 0;
+  line-height: 1.8;
+  color: rgba(0, 0, 0, 0.65);
+  font-size: 14px;
+}
+
+/* 漏洞说明卡片样式 */
+.vulnerability-card {
+  height: 100%;
+}
+
+.vulnerability-card .ant-card-body {
+  overflow-y: auto;
+}
+
+.vulnerability-card p {
+  margin-bottom: 12px;
+  line-height: 1.6;
+}
+
+.vulnerability-card strong {
+  color: rgba(0, 0, 0, 0.85);
+  margin-right: 8px;
+}
+
+/* 复用 AttackPath.less 风格 */
+
+.vulnerability-content {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.data-group {
+  flex: 1;
+  background: #161b22;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+.data-group h3 {
+  color: #60a5fa;
+  margin-bottom: 15px;
+}
+
+.data-list {
+  max-height: 300px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.scroll-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-x: hidden;
+}
+
+.data-card {
+  background: #1f2937;
+  transition: transform 0.3s, box-shadow 0.3s;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.data-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(255, 99, 71, 0.5);
+}
+
+/* 兼容原有深色背景 */
+.tor-overview-container.dark-bg {
+  background: #181c23 !important;
+  min-height: 100vh;
+  padding: 24px;
+}
+
+/* 兼容原有表格、标签、搜索框等深色样式 */
+.dark-table th, .dark-table td {
+  color: #fff;
+  border-bottom: 1px solid #444;
+}
+.dark-tag {
+  color: #fff !important;
+  font-weight: 500;
+  border-radius: 16px;
+  font-size: 15px;
+  background: rgba(22,119,255,0.15) !important;
+  border: none !important;
+}
+
+.vulnerability-content h3 {
+  margin-bottom: 8px;
+  margin-top: 0;
+}
+

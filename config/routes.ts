@@ -59,11 +59,11 @@ export default [
         path: '/data-analysis/tor-overview',
         component: './DataAnalysis/TorOverview',
       },
-      // {
-      //   name: '节点分析结果',
-      //   path: '/data-analysis/node-results',
-      //   component: './DataAnalysis/NodeResults',
-      // },
+      {
+        name: '节点分析结果',
+        path: '/data-analysis/node-results',
+        component: './DataAnalysis/NodeResults',
+      },
     ],
   },
   {
