@@ -257,11 +257,11 @@
   .card-container {
     height: 280px;
   }
-  
+
   .ant-card-head-title {
     font-size: 16px;
   }
-  
+
   .statistic-card .ant-statistic-content {
     font-size: 20px;
   }
@@ -271,16 +271,16 @@
   .tor-overview-container {
     padding: 16px;
   }
-  
+
   .card-container {
     height: 260px;
     margin-bottom: 16px;
   }
-  
+
   .ant-card-body {
     padding: 16px;
   }
-  
+
   .chart-container {
     height: 300px;
   }
@@ -326,3 +326,8 @@
   margin-right: 8px;
 }
 
+.card1 .ant-card-body {
+  background-color: #141414; /* 你自己的暗色背景 */
+  color: #fff;
+  border-radius: 0 0 10px 10px;
+}

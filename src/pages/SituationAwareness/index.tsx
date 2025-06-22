@@ -93,7 +93,7 @@ const SituationAwareness: React.FC = () => {
         }
         return prev;
       });
-    }, 10000); // 每100ms更新一次
+    }, 21000); // 每100ms更新一次
 
     const processedInterval = setInterval(() => {
       setProcessedProgress(prev => {
@@ -102,7 +102,7 @@ const SituationAwareness: React.FC = () => {
         }
         return prev;
       });
-    }, 10000); // 每100ms更新一次
+    }, 33000); // 每100ms更新一次
 
     return () => {
       clearInterval(scanInterval);
