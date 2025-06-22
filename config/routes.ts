@@ -50,12 +50,12 @@ export default [
     ],
   },
   {
-    name: '数据分析结果',
+    name: '脆弱性分析系统',
     icon: 'barChart',
     path: '/data-analysis',
     routes: [
       {
-        name: 'Tor节点信息概览',
+        name: '脆弱性数据统计',
         path: '/data-analysis/tor-overview',
         component: './DataAnalysis/TorOverview',
       },

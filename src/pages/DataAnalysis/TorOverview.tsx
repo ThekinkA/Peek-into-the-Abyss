@@ -8,9 +8,9 @@ import StarryBackground from '@/components/Background'
 
 // 颜色映射
 const typeColorMap = {
-  entry: '#FF6F61',  // 高脆弱性节点
-  relay: '#F4D03F',  // 中脆弱性节点
-  exit: '#B3E5D6',   // 低脆弱性节点
+  entry: '#d63e2f',  // 高脆弱性节点
+  relay: '#dac335',  // 中脆弱性节点
+  exit: '#7ac5ae',   // 低脆弱性节点
 };
 
 // 节点类型映射
@@ -108,12 +108,14 @@ const NodeCard = ({
     <div className={`card-container ${showDetails ? 'flipped' : ''}`}>
       <div className="card-face card-front">
         <Card
+          className="card1"
           title={type === 'entry' ? '入口节点' : type === 'relay' ? '中继节点' : '出口节点'}
           style={{
             backgroundColor: typeColorMap[type],
             color: 'white',
             borderRadius: '10px',
-            boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
+            boxShadow: '0px 0px 0px rgba(0, 0, 0, 0.1)',
+            border: `2px solid ${typeColorMap[type]}`,
           }}
         >
           <Statistic title="节点总数" value={totalCount} />
@@ -239,6 +241,10 @@ const TorNodeVisualization = () => {
   const [geoData, setGeoData] = useState<{name: string; value: number}[]>([]);
   const [mapLoading, setMapLoading] = useState(false);
 
+  const [secureNodes, setSecureNodes] = useState<any[]>([]);
+  const [vulnerableNodes, setVulnerableNodes] = useState<any[]>([]);
+
+
   // 获取节点分类统计
   useEffect(() => {
     const fetchNodeStats = async () => {
@@ -263,6 +269,47 @@ const TorNodeVisualization = () => {
     };
     fetchNodeStats();
   }, []); // 移除 nodeDetails 依赖
+
+  useEffect(() => {
+    const mockData = [
+      { IP: '251.11.234.116', category: 'Guard', vulnerability_score: 3.12 },
+      { IP: '229.23.253.1', category: 'Middle', vulnerability_score: 3.35 },
+      { IP: '8.136.110.221', category: 'Exit', vulnerability_score: 3.55 },
+      { IP: '227.80.8.1', category: 'Guard', vulnerability_score: 3.72 },
+      { IP: '2.4.231.255', category: 'Middle', vulnerability_score: 3.88 },
+      { IP: '3.4.55.252', category: 'Exit', vulnerability_score: 4.01 },
+      { IP: '1.170.220.39', category: 'Exit', vulnerability_score: 4.15 },
+      { IP: '100.8.108.18', category: 'Middle', vulnerability_score: 4.29 },
+      { IP: '36.252.3.2', category: 'Guard', vulnerability_score: 4.45 },
+      { IP: '144.2.6.227', category: 'Guard', vulnerability_score: 4.61 },
+      { IP: '4.26.1.71', category: 'Exit', vulnerability_score: 4.78 },
+      { IP: '166.223.229.253', category: 'Exit', vulnerability_score: 4.91 },
+      { IP: '253.245.5.6', category: 'Middle', vulnerability_score: 5.05 },
+      { IP: '238.0.251.3', category: 'Guard', vulnerability_score: 5.19 },
+      { IP: '192.168.1.15', category: 'Exit', vulnerability_score: 5.33 },
+      { IP: '210.0.125.250', category: 'Exit', vulnerability_score: 9.83 },
+      { IP: '47.74.139.121', category: 'Exit', vulnerability_score: 9.67 },
+      { IP: '179.153.55.227', category: 'Middle', vulnerability_score: 9.55 },
+      { IP: '242.172.255.62', category: 'Exit', vulnerability_score: 9.39 },
+      { IP: '1.47.251.222', category: 'Guard', vulnerability_score: 9.24 },
+      { IP: '237.229.8.0', category: 'Middle', vulnerability_score: 9.11 },
+      { IP: '223.6.9.251', category: 'Guard', vulnerability_score: 8.95 },
+      { IP: '251.12.204.250', category: 'Guard', vulnerability_score: 8.81 },
+      { IP: '230.1.252.132', category: 'Middle', vulnerability_score: 8.66 },
+      { IP: '10.0.0.10', category: 'Exit', vulnerability_score: 8.52 },
+      { IP: '227.241.21.253', category: 'Middle', vulnerability_score: 8.37 },
+      { IP: '179.255.87.5', category: 'Middle', vulnerability_score: 8.22 },
+      { IP: '8.4.254.60', category: 'Exit', vulnerability_score: 8.09 },
+      { IP: '5.169.228.243', category: 'Middle', vulnerability_score: 7.93 },
+      { IP: '42.47.149.241', category: 'Guard', vulnerability_score: 7.78 },
+    ];
+
+    const sorted = [...mockData].sort((a, b) => a.vulnerability_score - b.vulnerability_score);
+    setSecureNodes(sorted.slice(0, 15));
+    setVulnerableNodes(sorted.slice(-15).reverse());
+  }, []);
+
+
 
   // 获取节点详细信息
   const fetchNodeDetails = async (type: 'entry' | 'relay' | 'exit') => {
@@ -373,80 +420,7 @@ const TorNodeVisualization = () => {
   }, [vulnerabilityStats]);
 
   // 修改 Family 图谱的 tooltip formatter
-  useEffect(() => {
-    const familyGraph = echarts.init(document.getElementById('familyGraph')!);
-    const familyOption = {
-      title: { text: 'Family 知识图谱', left: 'center' },
-      tooltip: {
-        trigger: 'item',
-        formatter: (params: any) => {
-          if (params.dataType === 'node') {
-            return `节点：${params.data.name}`;
-          } else if (params.dataType === 'edge') {
-            return `连接：${params.data.source} → ${params.data.target}`;
-          }
-          return '';
-        },
-      },
-      series: [
-        {
-          type: 'graph',
-          layout: 'force',
-          roam: true,
-          zoom: 0.7, // 初始缩放
-          force: {
-            repulsion: 300,
-            edgeLength: 150,
-          },
-          label: {
-            show: true,
-            color: '#fff',
-            fontSize: 14,
-          },
-          edgeSymbol: ['circle', 'arrow'],
-          edgeSymbolSize: [4, 10],
-          lineStyle: {
-            color: 'source',
-            width: 2,
-            curveness: 0.3,
-          },
-          emphasis: {
-            focus: 'adjacency',
-            lineStyle: {
-              width: 4,
-            },
-          },
-          data: [
-            { name: 'family:1', symbolSize: 50, itemStyle: { color: '#FF6F61' } },
-            { name: '185.40.4.29', symbolSize: 30, itemStyle: { color: '#6A5ACD' } },
-            { name: '185.229.90.81', symbolSize: 30, itemStyle: { color: '#1ABC9C' } },
-            { name: 'family:2', symbolSize: 50, itemStyle: { color: '#F4D03F' } },
-            { name: '57.128.180.74', symbolSize: 30, itemStyle: { color: '#3498DB' } },
-            { name: '216.181.20.181', symbolSize: 30, itemStyle: { color: '#E74C3C' } },
-            { name: 'family:3', symbolSize: 50, itemStyle: { color: '#8B0000' } },
-            { name: '1.114.80.42', symbolSize: 30, itemStyle: { color: '#FF3399' } },
-            { name: '126.1.41.21', symbolSize: 30, itemStyle: { color: '#E5FFCC' } },
-          ],
-          links: [
-            { source: 'family:1', target: '185.40.4.29', lineStyle: { color: '#FF6F61' } },
-            { source: 'family:1', target: '185.229.90.81', lineStyle: { color: '#FF6F61' } },
-            { source: 'family:2', target: '57.128.180.74', lineStyle: { color: '#F4D03F' } },
-            { source: 'family:2', target: '216.181.20.181', lineStyle: { color: '#F4D03F' } },
-            { source: 'family:3', target: '1.114.80.42', lineStyle: { color: '#F4D03F' } },
-            { source: 'family:3', target: '126.1.41.21', lineStyle: { color: '#F4D03F' } },
-          ],
-        },
-      ],
-    };
 
-    familyGraph.setOption(familyOption);
-    familyGraph.resize();
-    window.addEventListener('resize', () => familyGraph.resize());
-
-    return () => {
-      familyGraph.dispose();
-    };
-  }, []);
 
   // 切换分页
   const handlePaginationChange = (type: string, page: number, pageSize: number) => {
@@ -566,6 +540,69 @@ const TorNodeVisualization = () => {
       </div>
       <div>
         {/* 节点类型卡片 */}
+        <Row gutter={16} style={{ marginBottom: '20px' }}>
+          <Col span={12}>
+            <Card title="高安全性 Tor 节点" style={{ maxHeight: 500, overflowY: 'auto' }}>
+              <Table
+                dataSource={secureNodes.map((item, index) => ({
+                  ...item,
+                  key: index,
+                  rank: index + 1
+                }))}
+                columns={[
+                  { title: '排名', dataIndex: 'rank', key: 'rank' },
+                  { title: 'IP', dataIndex: 'IP', key: 'IP' },
+                  {
+                    title: '类型',
+                    dataIndex: 'category',
+                    key: 'category',
+                    render: (text: string) =>
+                      text === 'Guard' ? '入口' : text === 'Middle' ? '中继' : '出口'
+                  },
+                  {
+                    title: '脆弱性得分',
+                    dataIndex: 'vulnerability_score',
+                    key: 'vulnerability_score',
+                    render: (score: number) => score.toFixed(2)
+                  }
+                ]}
+                pagination={false}
+                size="small"
+              />
+            </Card>
+          </Col>
+
+          <Col span={12}>
+            <Card title="高脆弱性 Tor 节点" style={{ maxHeight: 500, overflowY: 'auto' }}>
+              <Table
+                dataSource={vulnerableNodes.map((item, index) => ({
+                  ...item,
+                  key: index,
+                  rank: index + 1
+                }))}
+                columns={[
+                  { title: '排名', dataIndex: 'rank', key: 'rank' },
+                  { title: 'IP', dataIndex: 'IP', key: 'IP' },
+                  {
+                    title: '类型',
+                    dataIndex: 'category',
+                    key: 'category',
+                    render: (text: string) =>
+                      text === 'Guard' ? '入口' : text === 'Middle' ? '中继' : '出口'
+                  },
+                  {
+                    title: '脆弱性得分',
+                    dataIndex: 'vulnerability_score',
+                    key: 'vulnerability_score',
+                    render: (score: number) => score.toFixed(2)
+                  }
+                ]}
+                pagination={false}
+                size="small"
+              />
+            </Card>
+          </Col>
+        </Row>
         <Row gutter={16} style={{marginBottom: '20px'}}>
           <Col span={8}>
             <NodeCard
@@ -605,27 +642,6 @@ const TorNodeVisualization = () => {
           </Col>
         </Row>
 
-        {/* Family 知识图谱 + 含义介绍 */}
-        <Row gutter={16} style={{marginBottom: '20px', marginTop: '20px'}}>
-          <Col span={16}>
-            <Card
-              title="Family 字段知识图谱"
-              bodyStyle={{padding: 0}}
-              style={{height: '400px'}}
-            >
-              <div id="familyGraph" className="family-graph"></div>
-            </Card>
-          </Col>
-          <Col span={8}>
-            <Card title="Family 字段含义">
-              <p className="vuln-description">
-                在 Tor 网络中，family 表示多个节点属于同一个运营实体或相互信任的关系。
-                通常情况下，Tor 会避免将属于同一个 family 的节点同时用于构建同一路径，
-                以防止信息泄露或被中间人攻击。该字段可用于构建更加安全、隐私保护更强的路由。
-              </p>
-            </Card>
-          </Col>
-        </Row>
 
         {/* 漏洞说明 + 数据图表 */}
         <Row gutter={16} style={{marginBottom: '20px'}}>
