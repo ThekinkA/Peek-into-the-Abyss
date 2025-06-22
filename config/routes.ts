@@ -60,7 +60,7 @@ export default [
         component: './DataAnalysis/TorOverview',
       },
       {
-        name: '节点分析结果',
+        name: '脆弱性检索系统',
         path: '/data-analysis/node-results',
         component: './DataAnalysis/NodeResults',
       },
