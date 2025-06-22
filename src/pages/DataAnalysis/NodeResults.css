@@ -384,6 +384,9 @@
 .dark-table th, .dark-table td {
   color: #fff;
   border-bottom: 1px solid #444;
+  font-size: 20px;
+  font-weight: 600;
+  padding: 10px 0;
 }
 .dark-tag {
   color: #fff !important;
@@ -397,5 +400,34 @@
 .vulnerability-content h3 {
   margin-bottom: 8px;
   margin-top: 0;
+}
+
+/* 主标题样式 */
+.main-title {
+  text-align: center;
+  font-size: 2.4rem;
+  font-weight: bold;
+  color: #fff;
+  margin-top: 32px;
+  margin-bottom: 0;
+  letter-spacing: 2px;
+  text-shadow: 0 2px 16px #1677ff, 0 1px 0 #23272f;
+}
+
+/* 等级颜色样式 */
+.level-high {
+  color: #a8071a;
+  font-weight: bold;
+  font-size: 1.1em;
+}
+.level-medium {
+  color: #d4b106;
+  font-weight: bold;
+  font-size: 1.1em;
+}
+.level-low {
+  color: #389e0d;
+  font-weight: bold;
+  font-size: 1.1em;
 }
 

@@ -18,8 +18,8 @@ const vulnerabilityData: Record<string, {
   cveCount: number;
   dkvCount: number;
 }> = {
-  '1.1.1.1': {
-    overview: { ip: '1.1.1.1', level: '高', score: 8.7 },
+  '1.175.69.141': {
+    overview: { ip: '1.175.69.141', level: '高', score: 8.7 },
     cveList: ['CVE-2023-0001', 'CVE-2023-0002', 'CVE-2023-0003'],
     dkvList: ['DKV-1001', 'DKV-1002'],
     cveCount: 3,
@@ -49,7 +49,7 @@ const getLevelColor = (level: '高' | '中' | '低') => {
 
 const NodeResults = () => {
   const [searchIP, setSearchIP] = useState('');
-  const [currentData, setCurrentData] = useState<typeof vulnerabilityData['1.1.1.1'] | null>(null);
+  const [currentData, setCurrentData] = useState<typeof vulnerabilityData['1.175.69.141'] | null>(null);
 
   // 右侧Echarts渲染
   React.useEffect(() => {
@@ -99,6 +99,8 @@ const NodeResults = () => {
         <StarryBackground/>
       </div>
       <div className="tor-overview-container dark-bg" style={{position:'relative', zIndex: 1}}>
+        {/* 醒目主标题 */}
+        <h1 className="main-title">IP脆弱性检索</h1>
         {/* 居中放大的搜索框 */}
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '40px 0 32px 0' }}>
           <Search
@@ -106,7 +108,7 @@ const NodeResults = () => {
             enterButton="搜索"
             size="large"
             onSearch={handleSearch}
-            style={{ width: 400, maxWidth: '90%', background: '#23272f', color: '#fff', border: 'none' }}
+            style={{ width: 600, maxWidth: '90%', background: '#23272f', color: '#fff', border: 'none' }}
             className="dark-search"
           />
         </div>
@@ -127,7 +129,21 @@ const NodeResults = () => {
                 <tbody>
                   <tr>
                     <td style={{ padding: '4px 0' }}><Tag color="#1677ff" className="dark-tag">{currentData.overview.ip}</Tag></td>
-                    <td style={{ padding: '4px 0' }}><Tag color={getLevelColor(currentData.overview.level)} className="dark-tag">{currentData.overview.level}</Tag></td>
+                    <td style={{ padding: '4px 0' }}>
+                      <Tag className="dark-tag" style={{background:'none', border:'none', padding:0}}>
+                        <span
+                          className={
+                            currentData.overview.level === '高'
+                              ? 'level-high'
+                              : currentData.overview.level === '中'
+                              ? 'level-medium'
+                              : 'level-low'
+                          }
+                        >
+                          {currentData.overview.level}
+                        </span>
+                      </Tag>
+                    </td>
                     <td style={{ padding: '4px 0' }}><Tag color="#722ed1" className="dark-tag">{currentData.overview.score}</Tag></td>
                   </tr>
                 </tbody>
