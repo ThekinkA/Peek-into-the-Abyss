@@ -20,8 +20,8 @@ const vulnerabilityData: Record<string, {
 }> = {
   '1.175.69.141': {
     overview: { ip: '1.175.69.141', level: '高', score: 8.7 },
-    cveList: ['CVE-2023-0001', 'CVE-2023-0002', 'CVE-2023-0003'],
-    dkvList: ['DKV-1001', 'DKV-1002'],
+    cveList: ['CVE-2004-0001', 'CVE-2009-2321', 'CVE-2016-1001'],
+    dkvList: ['DKV-2222', 'DKV-9322','DKV-1325'],
     cveCount: 3,
     dkvCount: 2,
   },

@@ -43,8 +43,8 @@ type VulnerabilityDetailsMap = {
 const mockVulnerabilityDetails: VulnerabilityDetailsMap = {
   'CVE-2025-26465': {
     vulnerability_CVE: 'CVE-2025-26465',
-    description: 'Tor 网络中的流量分析漏洞，攻击者可能通过分析流量模式识别用户身份。该漏洞影响 Tor 0.4.7.x 版本，允许攻击者通过观察网络流量特征来推断用户行为模式。',
-    severity: '高危',
+    description: '攻击者可通过内存耗尽攻击迫使客户端跳过主机密钥验证，进而冒充合法服务器。',
+    severity: '中危',
     affected_versions: 'Tor 0.4.7.0 - 0.4.7.12',
     fix_version: 'Tor 0.4.7.13'
   },

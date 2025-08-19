@@ -15,7 +15,7 @@ const Settings: ProLayoutProps & {
   fixedHeader: false,
   fixSiderbar: true,
   colorWeak: false,
-  title: '暗网节点态势感知平台',
+  title: 'AbyssSight：暗网节点态势感知与执法攻防平台',
   pwa: true,
   logo: '/data/图片1.png',
   iconfontUrl: '',

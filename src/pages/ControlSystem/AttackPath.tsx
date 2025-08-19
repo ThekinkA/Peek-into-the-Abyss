@@ -54,181 +54,181 @@ const VulnerabilityInfo: React.FC = () => {
                         font: { size: 14, color: "#000000" }, // 节点字体配置
                         title_properties: ["ip", "ipid", "节点标识符"]
                     },
-                //     "带宽估计值": {
-                // label: "带宽估计值", // 显示节点的 `带宽估计值` 属性
-                // group: "community",
-                // size: 50,
-                // font: { size: 14, color: "#000000" },
-                // title_properties: ["带宽估计值", "带宽估计值id", "节点标识符"]
-                // },
-                // "DirPort端口": {
-                //     label: "DirPort端口", // 显示节点的 `DirPort端口` 属性
-                //     group: "community",
-                //     size: 50,
-                //     font: { size: 14, color: "#000000" },
-                //     title_properties: ["DirPort端口", "DirPort端口id", "节点标识符"]
-                // },
-                // "ORPort端口": {
-                //     label: "ORPort端口", // 显示节点的 `ORPort端口` 属性
-                //     group: "community",
-                //     size: 50,
-                //     font: { size: 14, color: "#000000" },
-                //     title_properties: ["ORPort端口", "ORPort端口id", "节点标识符"]
-                // },
-                // "TCP端口": {
-                //     label: "TCP端口", // 显示节点的 `TCP端口` 属性
-                //     group: "community",
-                //     size: 50,
-                //     font: { size: 14, color: "#000000" },
-                //     title_properties: ["TCP端口", "TCP端口id", "节点标识符"]
-                // },
-                // "CPE": {
-                //     label: "CPE", // 显示节点的 `CPE` 属性
-                //     group: "community",
-                //     size: 50,
-                //     font: { size: 14, color: "#000000" },
-                //     title_properties: ["CPE", "CPEid", "节点标识符"]
-                // },
-                // "产品": {
-                //     label: "产品", // 显示节点的 `产品` 属性
-                //     group: "community",
-                //     size: 50,
-                //     font: { size: 14, color: "#000000" },
-                //     title_properties: ["产品", "产品id", "节点标识符"]
-                // },
-                // "端口服务": {
-                //     label: "端口服务", // 显示节点的 `端口服务` 属性
-                //     group: "community",
-                //     size: 50,
-                //     font: { size: 14, color: "#000000" },
-                //     title_properties: ["端口服务", "端口服务id", "节点标识符"]
-                // },
-                // "版本": {
-                //     label: "版本", // 显示节点的 `版本` 属性
-                //     group: "community",
-                //     size: 50,
-                //     font: { size: 14, color: "#000000" },
-                //     title_properties: ["版本", "版本id", "节点标识符"]
-                // },
-                // "端口状态": {
-                //     label: "端口状态", // 显示节点的 `端口状态` 属性
-                //     group: "community",
-                //     size: 50,
-                //     font: { size: 14, color: "#000000" },
-                //     title_properties: ["端口状态", "端口状态id", "节点标识符"]
-                // },
-                // "状态原因": {
-                //     label: "状态原因", // 显示节点的 `状态原因` 属性
-                //     group: "community",
-                //     size: 50,
-                //     font: { size: 14, color: "#000000" },
-                //     title_properties: ["状态原因", "状态原因id", "节点标识符"]
-                // },
-                // "置信度": {
-                //     label: "置信度", // 显示节点的 `置信度` 属性
-                //     group: "community",
-                //     size: 50,
-                //     font: { size: 14, color: "#000000" },
-                //     title_properties: ["置信度", "置信度id", "节点标识符"]
-                // },
-                // "额外信息": {
-                //     label: "额外信息", // 显示节点的 `额外信息` 属性
-                //     group: "community",
-                //     size: 50,
-                //     font: { size: 14, color: "#000000" },
-                //     title_properties: ["额外信息", "额外信息id", "节点标识符"]
-                // },
-                // "Tor版本": {
-                //     label: "Tor版本", // 显示节点的 `Tor版本` 属性
-                //     group: "community",
-                //     size: 50,
-                //     font: { size: 14, color: "#000000" },
-                //     title_properties: ["Tor版本", "Tor版本id", "节点标识符"]
-                // },
-                // "主机名": {
-                //     label: "主机名", // 显示节点的 `主机名` 属性
-                //     group: "community",
-                //     size: 50,
-                //     font: { size: 14, color: "#000000" },
-                //     title_properties: ["主机名", "主机名id", "节点标识符"]
-                // },
-                // "主机状态": {
-                //     label: "主机状态", // 显示节点的 `主机状态` 属性
-                //     group: "community",
-                //     size: 50,
-                //     font: { size: 14, color: "#000000" },
-                //     title_properties: ["主机状态", "主机状态id", "节点标识符"]
-                // },
-                // "主机状态原因": {
-                //     label: "主机状态原因", // 显示节点的 `主机状态原因` 属性
-                //     group: "community",
-                //     size: 50,
-                //     font: { size: 14, color: "#000000" },
-                //     title_properties: ["主机状态原因", "主机状态原因id", "节点标识符"]
-                // },
-                // "主机类型": {
-                //     label: "主机类型", // 显示节点的 `主机类型` 属性
-                //     group: "community",
-                //     size: 50,
-                //     font: { size: 14, color: "#000000" },
-                //     title_properties: ["主机类型", "主机类型id", "节点标识符"]
-                // },
-                // "协议版本": {
-                //     label: "协议版本", // 显示节点的 `协议版本` 属性
-                //     group: "community",
-                //     size: 50,
-                //     font: { size: 14, color: "#000000" },
-                //     title_properties: ["协议版本", "协议版本id", "节点标识符"]
-                // },
-                // "微描述摘要散列": {
-                //     label: "微描述摘要散列", // 显示节点的 `微描述摘要散列` 属性
-                //     group: "community",
-                //     size: 50,
-                //     font: { size: 14, color: "#000000" },
-                //     title_properties: ["微描述摘要散列", "微描述摘要散列id", "节点标识符"]
-                // },
-                // "特征标签": {
-                //     label: "特征标签", // 显示节点的 `特征标签` 属性
-                //     group: "community",
-                //     size: 50,
-                //     font: { size: 14, color: "#000000" },
-                //     title_properties: ["特征标签", "特征标签id", "节点标识符"]
-                // },
-                // "昵称": {
-                //     label: "昵称", // 显示节点的 `昵称` 属性
-                //     group: "community",
-                //     size: 50,
-                //     font: { size: 14, color: "#000000" },
-                //     title_properties: ["昵称", "昵称id", "节点标识符"]
-                // },
-                // "身份哈希值密钥": {
-                //     label: "身份哈希值密钥", // 显示节点的 `身份哈希值密钥` 属性
-                //     group: "community",
-                //     size: 50,
-                //     font: { size: 14, color: "#000000" },
-                //     title_properties: ["身份哈希值密钥", "身份哈希值密钥id", "节点标识符"]
-                // },
-                // "操作系统名称及版本": {
-                //     label: "操作系统名称及版本", // 显示节点的 `操作系统名称及版本` 属性
-                //     group: "community",
-                //     size: 50,
-                //     font: { size: 14, color: "#000000" },
-                //     title_properties: ["操作系统名称及版本", "操作系统名称及版本id", "节点标识符"]
-                // },
-                // "OScpe标识符": {
-                //     label: "OScpe标识符", // 显示节点的 `OScpe标识符` 属性
-                //     group: "community",
-                //     size: 50,
-                //     font: { size: 14, color: "#000000" },
-                //     title_properties: ["OScpe标识符", "OScpe标识符id", "节点标识符"]
-                // },
-                // "设备类型": {
-                //     label: "设备类型", // 显示节点的 `设备类型` 属性
-                //     group: "community",
-                //     size: 50,
-                //     font: { size: 14, color: "#000000" },
-                //     title_properties: ["设备类型", "设备类型id", "节点标识符"]
-                // },
+                    "带宽估计值": {
+                label: "带宽估计值", // 显示节点的 `带宽估计值` 属性
+                group: "community",
+                size: 50,
+                font: { size: 14, color: "#000000" },
+                title_properties: ["带宽估计值", "带宽估计值id", "节点标识符"]
+                },
+                "DirPort端口": {
+                    label: "DirPort端口", // 显示节点的 `DirPort端口` 属性
+                    group: "community",
+                    size: 50,
+                    font: { size: 14, color: "#000000" },
+                    title_properties: ["DirPort端口", "DirPort端口id", "节点标识符"]
+                },
+                "ORPort端口": {
+                    label: "ORPort端口", // 显示节点的 `ORPort端口` 属性
+                    group: "community",
+                    size: 50,
+                    font: { size: 14, color: "#000000" },
+                    title_properties: ["ORPort端口", "ORPort端口id", "节点标识符"]
+                },
+                "TCP端口": {
+                    label: "TCP端口", // 显示节点的 `TCP端口` 属性
+                    group: "community",
+                    size: 50,
+                    font: { size: 14, color: "#000000" },
+                    title_properties: ["TCP端口", "TCP端口id", "节点标识符"]
+                },
+                "CPE": {
+                    label: "CPE", // 显示节点的 `CPE` 属性
+                    group: "community",
+                    size: 50,
+                    font: { size: 14, color: "#000000" },
+                    title_properties: ["CPE", "CPEid", "节点标识符"]
+                },
+                "产品": {
+                    label: "产品", // 显示节点的 `产品` 属性
+                    group: "community",
+                    size: 50,
+                    font: { size: 14, color: "#000000" },
+                    title_properties: ["产品", "产品id", "节点标识符"]
+                },
+                "端口服务": {
+                    label: "端口服务", // 显示节点的 `端口服务` 属性
+                    group: "community",
+                    size: 50,
+                    font: { size: 14, color: "#000000" },
+                    title_properties: ["端口服务", "端口服务id", "节点标识符"]
+                },
+                "版本": {
+                    label: "版本", // 显示节点的 `版本` 属性
+                    group: "community",
+                    size: 50,
+                    font: { size: 14, color: "#000000" },
+                    title_properties: ["版本", "版本id", "节点标识符"]
+                },
+                "端口状态": {
+                    label: "端口状态", // 显示节点的 `端口状态` 属性
+                    group: "community",
+                    size: 50,
+                    font: { size: 14, color: "#000000" },
+                    title_properties: ["端口状态", "端口状态id", "节点标识符"]
+                },
+                "状态原因": {
+                    label: "状态原因", // 显示节点的 `状态原因` 属性
+                    group: "community",
+                    size: 50,
+                    font: { size: 14, color: "#000000" },
+                    title_properties: ["状态原因", "状态原因id", "节点标识符"]
+                },
+                "置信度": {
+                    label: "置信度", // 显示节点的 `置信度` 属性
+                    group: "community",
+                    size: 50,
+                    font: { size: 14, color: "#000000" },
+                    title_properties: ["置信度", "置信度id", "节点标识符"]
+                },
+                "额外信息": {
+                    label: "额外信息", // 显示节点的 `额外信息` 属性
+                    group: "community",
+                    size: 50,
+                    font: { size: 14, color: "#000000" },
+                    title_properties: ["额外信息", "额外信息id", "节点标识符"]
+                },
+                "Tor版本": {
+                    label: "Tor版本", // 显示节点的 `Tor版本` 属性
+                    group: "community",
+                    size: 50,
+                    font: { size: 14, color: "#000000" },
+                    title_properties: ["Tor版本", "Tor版本id", "节点标识符"]
+                },
+                "主机名": {
+                    label: "主机名", // 显示节点的 `主机名` 属性
+                    group: "community",
+                    size: 50,
+                    font: { size: 14, color: "#000000" },
+                    title_properties: ["主机名", "主机名id", "节点标识符"]
+                },
+                "主机状态": {
+                    label: "主机状态", // 显示节点的 `主机状态` 属性
+                    group: "community",
+                    size: 50,
+                    font: { size: 14, color: "#000000" },
+                    title_properties: ["主机状态", "主机状态id", "节点标识符"]
+                },
+                "主机状态原因": {
+                    label: "主机状态原因", // 显示节点的 `主机状态原因` 属性
+                    group: "community",
+                    size: 50,
+                    font: { size: 14, color: "#000000" },
+                    title_properties: ["主机状态原因", "主机状态原因id", "节点标识符"]
+                },
+                "主机类型": {
+                    label: "主机类型", // 显示节点的 `主机类型` 属性
+                    group: "community",
+                    size: 50,
+                    font: { size: 14, color: "#000000" },
+                    title_properties: ["主机类型", "主机类型id", "节点标识符"]
+                },
+                "协议版本": {
+                    label: "协议版本", // 显示节点的 `协议版本` 属性
+                    group: "community",
+                    size: 50,
+                    font: { size: 14, color: "#000000" },
+                    title_properties: ["协议版本", "协议版本id", "节点标识符"]
+                },
+                "微描述摘要散列": {
+                    label: "微描述摘要散列", // 显示节点的 `微描述摘要散列` 属性
+                    group: "community",
+                    size: 50,
+                    font: { size: 14, color: "#000000" },
+                    title_properties: ["微描述摘要散列", "微描述摘要散列id", "节点标识符"]
+                },
+                "特征标签": {
+                    label: "特征标签", // 显示节点的 `特征标签` 属性
+                    group: "community",
+                    size: 50,
+                    font: { size: 14, color: "#000000" },
+                    title_properties: ["特征标签", "特征标签id", "节点标识符"]
+                },
+                "昵称": {
+                    label: "昵称", // 显示节点的 `昵称` 属性
+                    group: "community",
+                    size: 50,
+                    font: { size: 14, color: "#000000" },
+                    title_properties: ["昵称", "昵称id", "节点标识符"]
+                },
+                "身份哈希值密钥": {
+                    label: "身份哈希值密钥", // 显示节点的 `身份哈希值密钥` 属性
+                    group: "community",
+                    size: 50,
+                    font: { size: 14, color: "#000000" },
+                    title_properties: ["身份哈希值密钥", "身份哈希值密钥id", "节点标识符"]
+                },
+                "操作系统名称及版本": {
+                    label: "操作系统名称及版本", // 显示节点的 `操作系统名称及版本` 属性
+                    group: "community",
+                    size: 50,
+                    font: { size: 14, color: "#000000" },
+                    title_properties: ["操作系统名称及版本", "操作系统名称及版本id", "节点标识符"]
+                },
+                "OScpe标识符": {
+                    label: "OScpe标识符", // 显示节点的 `OScpe标识符` 属性
+                    group: "community",
+                    size: 50,
+                    font: { size: 14, color: "#000000" },
+                    title_properties: ["OScpe标识符", "OScpe标识符id", "节点标识符"]
+                },
+                "设备类型": {
+                    label: "设备类型", // 显示节点的 `设备类型` 属性
+                    group: "community",
+                    size: 50,
+                    font: { size: 14, color: "#000000" },
+                    title_properties: ["设备类型", "设备类型id", "节点标识符"]
+                },
                 // "漏洞": {
                 //     group: "community",
                 //     size: 50,
@@ -245,9 +245,10 @@ const VulnerabilityInfo: React.FC = () => {
                 },
                 visConfig: {
                     nodes: {
-                        shape: 'circle', // 设置节点形状为圆形
+                        shape: 'text', // 设置节点形状为圆形
                         size: 100, // 统一节点大小
-                        font: { size: 14, color: "#000000" ,align: "bottom" } // 节点字体配置
+                        font: { size: 14, color: "#000000" ,align: "bottom" }, // 节点字体配置
+                        overflow: 'visible'
                     },
                     edges: {
                         arrows: {

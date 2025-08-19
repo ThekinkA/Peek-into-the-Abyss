@@ -26,7 +26,7 @@ const ResultAnalysis: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [showBoxes, setShowBoxes] = useState(false);
   const [pdfFile, setPdfFile] = useState<string | null>(null);
-  const [cardTitle, setCardTitle] = useState('概率最高的攻击路径');
+  const [cardTitle, setCardTitle] = useState('攻击路径');
   const [graphData, setGraphData] = useState<{ nodes: any[]; relationships: any[] } | null>(null);
   const [queryIndex, setQueryIndex] = useState(1); // 当前查询索引，初始值为 1
   const [noResult, setNoResult] = useState(false); // 是否显示“未查询到结果”的提示

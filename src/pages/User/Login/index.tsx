@@ -170,7 +170,7 @@ const Login: React.FC = () => {
             maxWidth: '75vw',
           }}
           logo={<img alt="logo" src="/logo.png" />}
-          title="暗网态势感知平台"
+          title="AbyssSight：暗网节点态势感知与执法攻防平台"
           subTitle={intl.formatMessage({ id: 'pages.layouts.userLayout.title' })}
           initialValues={{
             autoLogin: true,
